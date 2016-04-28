@@ -36,12 +36,16 @@
             this.textBoxDir = new System.Windows.Forms.TextBox();
             this.chooseDir = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.apiUsername = new System.Windows.Forms.Label();
+            this.apiPassword = new System.Windows.Forms.Label();
+            this.textBoxUsername = new System.Windows.Forms.TextBox();
+            this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(40, 30);
+            this.label1.Location = new System.Drawing.Point(46, 30);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(106, 13);
             this.label1.TabIndex = 0;
@@ -60,7 +64,7 @@
             // 
             // go
             // 
-            this.go.Location = new System.Drawing.Point(166, 113);
+            this.go.Location = new System.Drawing.Point(166, 178);
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(75, 23);
             this.go.TabIndex = 5;
@@ -70,7 +74,7 @@
             // 
             // close
             // 
-            this.close.Location = new System.Drawing.Point(297, 113);
+            this.close.Location = new System.Drawing.Point(297, 178);
             this.close.Name = "close";
             this.close.Size = new System.Drawing.Size(75, 23);
             this.close.TabIndex = 6;
@@ -81,7 +85,7 @@
             // directory
             // 
             this.directory.AutoSize = true;
-            this.directory.Location = new System.Drawing.Point(40, 61);
+            this.directory.Location = new System.Drawing.Point(46, 63);
             this.directory.Name = "directory";
             this.directory.Size = new System.Drawing.Size(87, 13);
             this.directory.TabIndex = 2;
@@ -89,7 +93,7 @@
             // 
             // textBoxDir
             // 
-            this.textBoxDir.Location = new System.Drawing.Point(161, 58);
+            this.textBoxDir.Location = new System.Drawing.Point(161, 60);
             this.textBoxDir.Name = "textBoxDir";
             this.textBoxDir.Size = new System.Drawing.Size(292, 20);
             this.textBoxDir.TabIndex = 3;
@@ -97,7 +101,7 @@
             // 
             // chooseDir
             // 
-            this.chooseDir.Location = new System.Drawing.Point(459, 56);
+            this.chooseDir.Location = new System.Drawing.Point(459, 58);
             this.chooseDir.Name = "chooseDir";
             this.chooseDir.Size = new System.Drawing.Size(40, 23);
             this.chooseDir.TabIndex = 4;
@@ -109,11 +113,48 @@
             // 
             this.folderBrowserDialog1.HelpRequest += new System.EventHandler(this.folderBrowserDialog1_HelpRequest);
             // 
+            // apiUsername
+            // 
+            this.apiUsername.AutoSize = true;
+            this.apiUsername.Location = new System.Drawing.Point(46, 101);
+            this.apiUsername.Name = "apiUsername";
+            this.apiUsername.Size = new System.Drawing.Size(78, 13);
+            this.apiUsername.TabIndex = 7;
+            this.apiUsername.Text = "API Username:";
+            // 
+            // apiPassword
+            // 
+            this.apiPassword.AutoSize = true;
+            this.apiPassword.Location = new System.Drawing.Point(46, 136);
+            this.apiPassword.Name = "apiPassword";
+            this.apiPassword.Size = new System.Drawing.Size(76, 13);
+            this.apiPassword.TabIndex = 8;
+            this.apiPassword.Text = "API Password:";
+            // 
+            // textBoxUsername
+            // 
+            this.textBoxUsername.Location = new System.Drawing.Point(161, 97);
+            this.textBoxUsername.Name = "textBoxUsername";
+            this.textBoxUsername.Size = new System.Drawing.Size(177, 20);
+            this.textBoxUsername.TabIndex = 9;
+            // 
+            // textBoxPassword
+            // 
+            this.textBoxPassword.Location = new System.Drawing.Point(161, 133);
+            this.textBoxPassword.Name = "textBoxPassword";
+            this.textBoxPassword.PasswordChar = '*';
+            this.textBoxPassword.Size = new System.Drawing.Size(177, 20);
+            this.textBoxPassword.TabIndex = 10;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(539, 148);
+            this.ClientSize = new System.Drawing.Size(539, 213);
+            this.Controls.Add(this.textBoxPassword);
+            this.Controls.Add(this.textBoxUsername);
+            this.Controls.Add(this.apiPassword);
+            this.Controls.Add(this.apiUsername);
             this.Controls.Add(this.chooseDir);
             this.Controls.Add(this.textBoxDir);
             this.Controls.Add(this.directory);
@@ -141,6 +182,10 @@
         private System.Windows.Forms.TextBox textBoxDir;
         private System.Windows.Forms.Button chooseDir;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+        private System.Windows.Forms.Label apiUsername;
+        private System.Windows.Forms.Label apiPassword;
+        private System.Windows.Forms.TextBox textBoxUsername;
+        private System.Windows.Forms.TextBox textBoxPassword;
     }
 }
 

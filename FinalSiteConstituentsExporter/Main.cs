@@ -25,9 +25,37 @@ namespace FinalSiteConstituentsExporter
 
         private void Main_Load(object sender, EventArgs e)
         {
+            DateTime startDate = DateTime.Today.Subtract(TimeSpan.FromDays(7));
+            String outputDir = "";
+            String userName = "";
+            String userPassword = "";
+
+            LoadOptions(ref startDate, ref outputDir, ref userName, ref userPassword);
+
             // Initialize picker to yesterday.
-            DateTime result = DateTime.Today.Subtract(TimeSpan.FromDays(7));
-            dateTimePicker1.Value = result;
+            dateTimePicker1.Value = startDate;
+            textBoxDir.Text = outputDir;
+            textBoxUsername.Text = userName;
+            textBoxPassword.Text = userPassword;
+        }
+
+        private void LoadOptions(ref DateTime startDate, ref String outputDir, ref String userName, ref String userPassword)
+        {
+            startDate = DateTime.Today.Subtract(TimeSpan.FromDays(7));
+            outputDir = "c:\\";
+            userName = "david.mariani";
+            userPassword = "Bully123";
+        }
+
+        private void SaveOptions()
+        {
+            DateTime result = dateTimePicker1.Value;
+            this.Text = result.ToString("MM/dd/yyyy");
+
+            DateTime startDate = result;
+            String outputDir = textBoxDir.Text;
+            String userName = textBoxUsername.Text;
+            String userPassword = textBoxPassword.Text;
         }
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
@@ -42,8 +70,8 @@ namespace FinalSiteConstituentsExporter
             DialogResult dialogResult = MessageBox.Show("Are you sure you want to begin the export starting at: " + this.Text, "Confirm Export", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
-                String username = "david.mariani1";
-                String password = "Bully123";
+                String username = textBoxUsername.Text;
+                String password = textBoxPassword.Text;
 
                 try
                 {
@@ -62,6 +90,7 @@ namespace FinalSiteConstituentsExporter
 
         private void close_Click(object sender, EventArgs e)
         {
+            SaveOptions();
             this.Close();
         }
 
@@ -116,12 +145,6 @@ namespace FinalSiteConstituentsExporter
                 // Get response  
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
-                    // Get the response stream  
-//                    StreamReader reader = new StreamReader(response.GetResponseStream());
-
-                    // Console application output  
-//                    Console.WriteLine(reader.ReadToEnd());
-
                     XmlDocument doc = new XmlDocument();
                     doc.Load(response.GetResponseStream());
 
@@ -131,9 +154,12 @@ namespace FinalSiteConstituentsExporter
                     XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
                     if (nodeSuccess.InnerText != "True")
                     {
-                        XmlNode nodeResult = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
-                        throw new Exception("Error logging into API with user=" + Username + ". Error=" + nodeResult.InnerText);
+                        XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                        throw new Exception("Error logging into API with user=" + Username + ". Error=" + nodeResultError.InnerText);
                     }
+
+                    XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                    Token = nodeResultSuccess.InnerText;
                 }
 
                 return Token;

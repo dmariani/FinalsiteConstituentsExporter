@@ -25,37 +25,29 @@ namespace FinalSiteConstituentsExporter
 
         private void Main_Load(object sender, EventArgs e)
         {
-            DateTime startDate = DateTime.Today.Subtract(TimeSpan.FromDays(7));
-            String outputDir = "";
-            String userName = "";
-            String userPassword = "";
-
-            LoadOptions(ref startDate, ref outputDir, ref userName, ref userPassword);
-
-            // Initialize picker to yesterday.
-            dateTimePicker1.Value = startDate;
-            textBoxDir.Text = outputDir;
-            textBoxUsername.Text = userName;
-            textBoxPassword.Text = userPassword;
+            LoadOptions();
         }
 
-        private void LoadOptions(ref DateTime startDate, ref String outputDir, ref String userName, ref String userPassword)
+        private void LoadOptions()
         {
-            startDate = DateTime.Today.Subtract(TimeSpan.FromDays(7));
-            outputDir = "c:\\";
-            userName = "david.mariani";
-            userPassword = "Bully123";
+            Properties.Settings.Default.Reload(); // Loads settings in application configuration file
+
+            dateTimePicker1.Value = DateTime.Parse(Properties.Settings.Default["startDate"].ToString());
+            textBoxDir.Text = Properties.Settings.Default["outputDir"].ToString();
+            textBoxUsername.Text = Properties.Settings.Default["userName"].ToString();
+            textBoxPassword.Text = Properties.Settings.Default["userPassword"].ToString();
         }
 
         private void SaveOptions()
         {
             DateTime result = dateTimePicker1.Value;
-            this.Text = result.ToString("MM/dd/yyyy");
+            String dateText = result.ToString("MM/dd/yyyy");
 
-            DateTime startDate = result;
-            String outputDir = textBoxDir.Text;
-            String userName = textBoxUsername.Text;
-            String userPassword = textBoxPassword.Text;
+            Properties.Settings.Default["startDate"] = dateText;
+            Properties.Settings.Default["outputDir"] = textBoxDir.Text;
+            Properties.Settings.Default["userName"] = textBoxUsername.Text;
+            Properties.Settings.Default["userPassword"] = textBoxPassword.Text;
+            Properties.Settings.Default.Save(); // Saves settings in application configuration file
         }
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)

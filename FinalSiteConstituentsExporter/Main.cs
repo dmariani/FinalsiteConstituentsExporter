@@ -70,26 +70,33 @@ namespace FinalSiteConstituentsExporter
                     Cursor.Current = Cursors.WaitCursor;
 
                     toolStripStatusLabel.Text = "Logging in...";
+                    statusStrip.Refresh();
 
-                    GetAuthToken(username, password);
+                    String token = GetAuthToken(username, password);
 
-                    toolStripStatusLabel.Text = "Reading data from Finalsite in...";
+                    toolStripStatusLabel.Text = "Fetching data from Finalsite...";
+                    statusStrip.Refresh();
 
                     // Read data
+                    DateTime result = dateTimePicker1.Value;
+                    String dateText = result.ToString("yyyy-MM-dd");
+
+                    long rowsExported = GetConstituentsData(token, dateText);
 
                     toolStripStatusLabel.Text = "Writing data to files...";
+                    statusStrip.Refresh();
 
                     // Write data
 
-                    long RowsExported = ProcessExport(this.Text, textBoxDir.Text);
-
                     toolStripStatusLabel.Text = "Export succeeded.";
+                    statusStrip.Refresh();
 
-                    MessageBox.Show("Success!  Exported " + RowsExported.ToString() + " rows starting at: " + this.Text + " and wrote files to: " + textBoxDir.Text, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Success!  Exported " + rowsExported.ToString() + " rows starting at: " + this.Text + " and wrote files to: " + textBoxDir.Text, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
                     toolStripStatusLabel.Text = "Export failed.";
+                    statusStrip.Refresh();
 
                     MessageBox.Show("Error: " + ex.Message, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -159,7 +166,7 @@ namespace FinalSiteConstituentsExporter
                     doc.Load(response.GetResponseStream());
 
                     XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
-                    ns.AddNamespace("apilogin", "http://www.finalsite.com/apidata/v1.0");
+                    ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
 
                     XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
                     if (nodeSuccess.InnerText != "True")
@@ -190,11 +197,54 @@ namespace FinalSiteConstituentsExporter
             }
         }
 
-        private long ProcessExport(String Datestr, String Dir)
+        private long GetConstituentsData(String token, String dateText)
         {
-            long RowsExported = 0;
+            long rowsExported = 0;
 
-            return RowsExported;
+            try
+            {
+                // We use the HttpUtility class from the System.Web namespace  
+                String uri = "https://www.ola.community/api/constituents/constituents.cfm";
+                uri += "?ModifiedDate=" + dateText;
+
+                Uri address = new Uri(uri);
+
+                // Create the web request  
+                HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+
+                // Set type to POST  
+                request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
+
+                // Get response  
+                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(response.GetResponseStream());
+
+                    XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+                    ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
+
+                    XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
+                    if (nodeSuccess.InnerText != "True")
+                    {
+                        XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                        throw new Exception("Error reading data from Finalsite. Error=" + nodeResultError.InnerText);
+                    }
+
+                    XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
+                    rowsExported = Convert.ToInt64(nodeResultSuccess.InnerText);
+                }
+
+                return rowsExported;
+            }
+            catch (WebException ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

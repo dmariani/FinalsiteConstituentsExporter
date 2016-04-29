@@ -67,16 +67,34 @@ namespace FinalSiteConstituentsExporter
 
                 try
                 {
+                    Cursor.Current = Cursors.WaitCursor;
+
+                    toolStripStatusLabel.Text = "Logging in...";
+
                     GetAuthToken(username, password);
 
+                    toolStripStatusLabel.Text = "Reading data from Finalsite in...";
+
+                    // Read data
+
+                    toolStripStatusLabel.Text = "Writing data to files...";
+
+                    // Write data
+
                     long RowsExported = ProcessExport(this.Text, textBoxDir.Text);
+
+                    toolStripStatusLabel.Text = "Export succeeded.";
 
                     MessageBox.Show("Success!  Exported " + RowsExported.ToString() + " rows starting at: " + this.Text + " and wrote files to: " + textBoxDir.Text, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
+                    toolStripStatusLabel.Text = "Export failed.";
+
                     MessageBox.Show("Error: " + ex.Message, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
+                Cursor.Current = Cursors.Default;
             }
         }
 

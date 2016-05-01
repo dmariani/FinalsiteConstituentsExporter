@@ -36,6 +36,7 @@ namespace FinalSiteConstituentsExporter
             textBoxDir.Text = Properties.Settings.Default["outputDir"].ToString();
             textBoxUsername.Text = Properties.Settings.Default["userName"].ToString();
             textBoxPassword.Text = Properties.Settings.Default["userPassword"].ToString();
+            textBoxApiKey.Text = Properties.Settings.Default["apiKey"].ToString();
         }
 
         private void SaveOptions()
@@ -47,6 +48,7 @@ namespace FinalSiteConstituentsExporter
             Properties.Settings.Default["outputDir"] = textBoxDir.Text;
             Properties.Settings.Default["userName"] = textBoxUsername.Text;
             Properties.Settings.Default["userPassword"] = textBoxPassword.Text;
+            Properties.Settings.Default["apiKey"] = textBoxApiKey.Text;
             Properties.Settings.Default.Save(); // Saves settings in application configuration file
         }
 
@@ -64,6 +66,7 @@ namespace FinalSiteConstituentsExporter
             {
                 String username = textBoxUsername.Text;
                 String password = textBoxPassword.Text;
+                String apiKey = textBoxApiKey.Text;
 
                 try
                 {
@@ -72,7 +75,7 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Logging in...";
                     statusStrip.Refresh();
 
-                    String token = GetAuthToken(username, password);
+                    String token = GetAuthToken(username, password, apiKey);
 
                     toolStripStatusLabel.Text = "Fetching data from Finalsite...";
                     statusStrip.Refresh();
@@ -124,7 +127,7 @@ namespace FinalSiteConstituentsExporter
             }
         }
         
-        private String GetAuthToken(String Username, String Password)
+        private String GetAuthToken(String Username, String Password, String apiKey)
         {
             String Token = "";
 

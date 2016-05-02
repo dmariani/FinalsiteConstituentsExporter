@@ -1,5 +1,6 @@
 obj/
 bin/
+Setup/Setup/Express/
 
 # Compiled Object files
 *.slo
@@ -30,3 +31,5 @@ bin/
 *.exe
 *.out
 *.app
+
+

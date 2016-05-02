@@ -67,29 +67,29 @@ namespace FinalSiteConstituentsExporter
                 String username = textBoxUsername.Text;
                 String password = textBoxPassword.Text;
                 String apiKey = textBoxApiKey.Text;
+                String outputDir = textBoxDir.Text;
 
                 try
                 {
                     Cursor.Current = Cursors.WaitCursor;
+
+                    // Remove the families file
+                    System.IO.File.Delete(outputDir + "//" + "families.csv");
+                    System.IO.File.Delete(outputDir + "//" + "members.csv");
 
                     toolStripStatusLabel.Text = "Logging in...";
                     statusStrip.Refresh();
 
                     String token = GetAuthToken(username, password, apiKey);
 
-                    toolStripStatusLabel.Text = "Fetching data from Finalsite...";
+                    toolStripStatusLabel.Text = "Requesting data from Finalsite...";
                     statusStrip.Refresh();
 
                     // Read data
                     DateTime result = dateTimePicker1.Value;
                     String dateText = result.ToString("yyyy-MM-dd");
 
-                    long rowsExported = GetConstituentsData(token, dateText);
-
-                    toolStripStatusLabel.Text = "Writing data to files...";
-                    statusStrip.Refresh();
-
-                    // Write data
+                    long rowsExported = GetConstituentsData(token, dateText, outputDir);
 
                     toolStripStatusLabel.Text = "Export succeeded.";
                     statusStrip.Refresh();
@@ -144,11 +144,8 @@ namespace FinalSiteConstituentsExporter
                 request.ContentType = "application/x-www-form-urlencoded";
                 request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes(Username + ":" + Password));
 
-                // Create the data we want to send  
-                string key = "0357D83A88AA320BE9194A00D753B5686CBC9547AFD0B6A7E54F9C84B064FBAD";
-
                 StringBuilder data = new StringBuilder();
-                data.Append("ApiEncryptedKey=" + HttpUtility.UrlEncode(key));
+                data.Append("ApiEncryptedKey=" + HttpUtility.UrlEncode(apiKey));
 
                 // Create a byte array of the data we want to send  
                 byte[] byteData = UTF8Encoding.UTF8.GetBytes(data.ToString());
@@ -200,7 +197,7 @@ namespace FinalSiteConstituentsExporter
             }
         }
 
-        private long GetConstituentsData(String token, String dateText)
+        private long GetConstituentsData(String token, String dateText, String outputDir)
         {
             long rowsExported = 0;
 
@@ -236,6 +233,108 @@ namespace FinalSiteConstituentsExporter
 
                     XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
                     rowsExported = Convert.ToInt64(nodeResultSuccess.InnerText);
+
+                    toolStripStatusLabel.Text = "Writing data to files...";
+                    statusStrip.Refresh();
+
+                    string[,] fields = new string[14, 2] { 
+                    { "ImportID", "MemberID" },
+                    { "BusRoute", "FamilyID" },
+                    { "FirstName", "FirstName" }, 
+                    { "MiddleName", "MiddleName" },
+                    { "LastName", "LastName" },
+                    { "NameSuffix", "NameSuffix" },
+                    { "Gender", "Gender" },
+                    { "Custom1", "EnvelopeID" },
+                    { "Custom3", "Relationship" },
+                    { "Custom4", "ActiveFlag" },
+                    { "DateEnrolled", "DateEnrolled" },
+                    { "BirthDate", "BirthDate" },
+                    { "MaritalStatus", "MaritalStatus" },
+                    { "Email", "Email" },
+                    };
+
+/*
+                    { "Address1", "Address1" }, // Addresses/Address/AddressType: Home
+                    { "Address2", "Address2" },
+                    { "City", "City" },
+                    { "State", "State" },
+                    { "Zip", "Zip" },
+                    { "PhoneNumber", "PhoneNumber" }, // Phones/Phone/PhoneType: Home, Work, Mobile
+                    { "Email", "Email" }, // Emails/Email/EmailType: Home, Work, School
+*/
+                    StringBuilder bodyFamilies = new StringBuilder();
+                    StringBuilder bodyMembers = new StringBuilder();
+
+                    StringBuilder header = new StringBuilder();
+                    
+                    for (int i = 0; i < fields.GetLength(0); i++)
+                    {
+                        if (header.Length > 0)
+                            header.Append(",");
+
+                        header.Append(fields[i, 1]);
+                    }
+
+                    header.AppendLine();
+                    bodyFamilies.Append(header);
+                    bodyMembers.Append(header);
+
+                    // Write the body records
+                    XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
+                    foreach (XmlNode constituent in constituents)
+                    {
+                        Boolean bIsHeadofHousehold = false;
+                        StringBuilder body = new StringBuilder();
+
+                        for (int i = 0; i < fields.GetLength(0); i++)
+                        {
+                            XmlNode node = constituent[fields[i, 0]];
+                            if (node == null)
+                                continue;
+
+                            String value = node.InnerText;
+
+                            Console.WriteLine(value);
+
+                            if (body.Length > 0)
+                                body.Append(",");
+
+                            // Perform transformations
+                            if (fields[i,1] == "Relationship" && value == "Primary Contact")
+                            {
+                                bIsHeadofHousehold = true;
+                                value = "Head of Household";
+                            }
+
+                            if (fields[i, 1] == "MemberID")
+                            {
+                                value = value.Replace("fs_", "");
+                            }
+
+                            if (fields[i, 1] == "ActiveFlag")
+                            {
+                                if (value == "Active")
+                                    value = "True";
+                                else
+                                    value = "False";
+                            }
+
+                            body.Append(value);
+                        }
+
+                        body.AppendLine();
+
+                        // Only write the head of household to the Families file
+                        if (bIsHeadofHousehold)
+                            bodyFamilies.Append(body);
+
+                        bodyMembers.Append(body);
+                    }
+
+                    // Now write the files
+                    System.IO.File.WriteAllText(outputDir + "//" + "families.csv", bodyFamilies.ToString());
+                    System.IO.File.WriteAllText(outputDir + "//" + "members.csv", bodyMembers.ToString());
                 }
 
                 return rowsExported;

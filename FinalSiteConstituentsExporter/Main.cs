@@ -54,9 +54,6 @@ namespace FinalSiteConstituentsExporter
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
         {
-            // Set title bar to selected date.
-            DateTime result = dateTimePicker1.Value;
-            this.Text = result.ToString("MM/dd/yyyy");
         }
 
         private void go_Click(object sender, EventArgs e)
@@ -237,7 +234,7 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Writing data to files...";
                     statusStrip.Refresh();
 
-                    string[,] fields = new string[14, 2] { 
+                    string[,] fields = new string[13, 2] { 
                     { "ImportID", "MemberID" },
                     { "BusRoute", "FamilyID" },
                     { "FirstName", "FirstName" }, 
@@ -251,7 +248,6 @@ namespace FinalSiteConstituentsExporter
                     { "DateEnrolled", "DateEnrolled" },
                     { "BirthDate", "BirthDate" },
                     { "MaritalStatus", "MaritalStatus" },
-                    { "Email", "Email" },
                     };
 
                     string[,] fieldsAddresses = new string[5, 2] { 
@@ -263,15 +259,16 @@ namespace FinalSiteConstituentsExporter
                     };
 
                     string[,] fieldsPhones = new string[3, 2] { 
-                    { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Work, Mobile
-                    { "PhoneNumber", "PhoneNumber-Work" }, 
-                    { "PhoneNumber", "PhoneNumber-Mobile" },
+                    { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Mobile, School
+                    { "PhoneNumber", "PhoneNumber-Mobile" }, 
+                    { "PhoneNumber", "PhoneNumber-School" },
                     };
 
-                    string[,] fieldsEmails = new string[3, 2] { 
-                    { "Email", "Email-Home" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
-                    { "Email", "Email-Work" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
-                    { "Email", "Email-School" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
+                    string[,] fieldsEmails = new string[4, 2] { 
+                    { "Email", "Email-Primary" }, // Emails/Email/EmailType: Home, Work, School
+                    { "Email", "Email-Home" },
+                    { "Email", "Email-Work" }, 
+                    { "Email", "Email-School" },
                     };
 
                     StringBuilder bodyFamilies = new StringBuilder();
@@ -366,7 +363,6 @@ namespace FinalSiteConstituentsExporter
                         XmlElement addressesElement = constituent["Addresses"];
                         if (addressesElement != null)
                         {
-
                             XmlNodeList addresses = addressesElement.ChildNodes;
                             if (addresses != null)
                             {
@@ -397,6 +393,116 @@ namespace FinalSiteConstituentsExporter
                                     }
                                 }
                             }
+                        }
+
+                        // Handle Phones
+                        Dictionary<String, String> dictionaryPhones = new Dictionary<String, String>();
+
+                        XmlElement phonesElement = constituent["Phones"];
+                        if (phonesElement != null)
+                        {
+                            XmlNodeList phones = phonesElement.ChildNodes;
+                            if (phones != null)
+                            {
+                                foreach (XmlNode phonesNode in phones)
+                                {
+                                    String phoneTypeStr = "";
+
+                                    XmlNode phoneType = phonesNode["PhoneType"];
+                                    if (phoneType != null)
+                                        phoneTypeStr = phoneType.InnerText;
+
+                                    XmlNode nodeP = phonesNode["PhoneNumber"];
+                                    if (nodeP == null)
+                                        continue;
+
+                                    String value = nodeP.InnerText;
+                                    dictionaryPhones.Add(phoneTypeStr, value);
+                                }
+                            }
+                        }
+
+                        // Now lookup in Home, Mobile, School order
+                        body.Append(",");
+                        if (dictionaryPhones.ContainsKey("Home"))
+                        {
+                            String value = dictionaryPhones["Home"];
+                            body.Append(value);
+                        }
+                        
+                        body.Append(",");
+                        if (dictionaryPhones.ContainsKey("Mobile"))
+                        {
+                            String value = dictionaryPhones["Mobile"];
+                            body.Append(value);
+                        }
+
+                        body.Append(",");
+                        if (dictionaryPhones.ContainsKey("School"))
+                        {
+                            String value = dictionaryPhones["School"];
+                            body.Append(value);
+                        }
+
+                        // Handle Emails
+                        Dictionary<String, String> dictionaryEmails = new Dictionary<String, String>();
+
+                        XmlElement emailsElement = constituent["Emails"];
+                        if (emailsElement != null)
+                        {
+                            XmlNodeList emails = emailsElement.ChildNodes;
+                            if (emails != null)
+                            {
+                                foreach (XmlNode emailsNode in emails)
+                                {
+                                    String emailTypeStr = "";
+
+                                    XmlNode emailType = emailsNode["EmailType"];
+                                    if (emailType != null)
+                                    {
+                                        emailTypeStr = emailType.InnerText;
+
+                                        if (emailTypeStr.Length == 0)
+                                            emailTypeStr = "Primary";
+
+                                        XmlNode nodeE = emailsNode["EmailAddress"];
+                                        if (nodeE == null)
+                                            continue;
+
+                                        String value = nodeE.InnerText;
+                                        dictionaryEmails.Add(emailTypeStr, value);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Now lookup in Home, Mobile, School order
+                        body.Append(",");
+                        if (dictionaryEmails.ContainsKey("Primary"))
+                        {
+                            String value = dictionaryEmails["Primary"];
+                            body.Append(value);
+                        }
+
+                        body.Append(",");
+                        if (dictionaryEmails.ContainsKey("Home"))
+                        {
+                            String value = dictionaryEmails["Home"];
+                            body.Append(value);
+                        }
+
+                        body.Append(",");
+                        if (dictionaryEmails.ContainsKey("Work"))
+                        {
+                            String value = dictionaryEmails["Work"];
+                            body.Append(value);
+                        }
+
+                        body.Append(",");
+                        if (dictionaryEmails.ContainsKey("School"))
+                        {
+                            String value = dictionaryEmails["School"];
+                            body.Append(value);
                         }
 
                         body.AppendLine();

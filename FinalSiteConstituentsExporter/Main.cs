@@ -332,7 +332,7 @@ namespace FinalSiteConstituentsExporter
                             if (node == null)
                                 continue;
 
-                            String value = node.InnerText;
+                            String value = node.InnerText.Replace(",", "");
 
                             Console.WriteLine(value);
 
@@ -361,7 +361,16 @@ namespace FinalSiteConstituentsExporter
 
                         // Handle Addresses
                         XmlElement addressesElement = constituent["Addresses"];
-                        if (addressesElement != null)
+                        if (addressesElement == null)
+                        {
+                            // Need to make sure we have placeholders if their is no address
+                            for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                            {
+                                if (body.Length > 0)
+                                    body.Append(",");
+                            }
+                        }
+                        else
                         {
                             XmlNodeList addresses = addressesElement.ChildNodes;
                             if (addresses != null)
@@ -387,7 +396,7 @@ namespace FinalSiteConstituentsExporter
                                         if (nodeA == null)
                                             continue;
 
-                                        String value = nodeA.InnerText;
+                                        String value = nodeA.InnerText.Replace(",","");
 
                                         body.Append(value);
                                     }
@@ -416,7 +425,7 @@ namespace FinalSiteConstituentsExporter
                                     if (nodeP == null)
                                         continue;
 
-                                    String value = nodeP.InnerText;
+                                    String value = nodeP.InnerText.Replace(",", "");
                                     dictionaryPhones.Add(phoneTypeStr, value);
                                 }
                             }
@@ -469,7 +478,7 @@ namespace FinalSiteConstituentsExporter
                                         if (nodeE == null)
                                             continue;
 
-                                        String value = nodeE.InnerText;
+                                        String value = nodeE.InnerText.Replace(",", "");
                                         dictionaryEmails.Add(emailTypeStr, value);
                                     }
                                 }

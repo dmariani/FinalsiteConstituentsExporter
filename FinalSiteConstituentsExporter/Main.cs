@@ -254,26 +254,65 @@ namespace FinalSiteConstituentsExporter
                     { "Email", "Email" },
                     };
 
-/*
+                    string[,] fieldsAddresses = new string[5, 2] { 
                     { "Address1", "Address1" }, // Addresses/Address/AddressType: Home
                     { "Address2", "Address2" },
                     { "City", "City" },
                     { "State", "State" },
                     { "Zip", "Zip" },
-                    { "PhoneNumber", "PhoneNumber" }, // Phones/Phone/PhoneType: Home, Work, Mobile
-                    { "Email", "Email" }, // Emails/Email/EmailType: Home, Work, School
-*/
+                    };
+
+                    string[,] fieldsPhones = new string[3, 2] { 
+                    { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Work, Mobile
+                    { "PhoneNumber", "PhoneNumber-Work" }, 
+                    { "PhoneNumber", "PhoneNumber-Mobile" },
+                    };
+
+                    string[,] fieldsEmails = new string[3, 2] { 
+                    { "Email", "Email-Home" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
+                    { "Email", "Email-Work" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
+                    { "Email", "Email-School" }, // Emails/Email/EmailType: Home, Work, School                    string[,] fieldsAddresses = new string[5, 2] { 
+                    };
+
                     StringBuilder bodyFamilies = new StringBuilder();
                     StringBuilder bodyMembers = new StringBuilder();
 
                     StringBuilder header = new StringBuilder();
                     
+                    // Write headers for main info
                     for (int i = 0; i < fields.GetLength(0); i++)
                     {
                         if (header.Length > 0)
                             header.Append(",");
 
                         header.Append(fields[i, 1]);
+                    }
+
+                    // Write headers for addresses
+                    for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                    {
+                        if (header.Length > 0)
+                            header.Append(",");
+
+                        header.Append(fieldsAddresses[i, 1]);
+                    }
+
+                    // Write headers for phones
+                    for (int i = 0; i < fieldsPhones.GetLength(0); i++)
+                    {
+                        if (header.Length > 0)
+                            header.Append(",");
+
+                        header.Append(fieldsPhones[i, 1]);
+                    }
+
+                    // Write headers for emails
+                    for (int i = 0; i < fieldsEmails.GetLength(0); i++)
+                    {
+                        if (header.Length > 0)
+                            header.Append(",");
+
+                        header.Append(fieldsEmails[i, 1]);
                     }
 
                     header.AppendLine();
@@ -289,6 +328,9 @@ namespace FinalSiteConstituentsExporter
 
                         for (int i = 0; i < fields.GetLength(0); i++)
                         {
+                            if (body.Length > 0)
+                                body.Append(",");
+
                             XmlNode node = constituent[fields[i, 0]];
                             if (node == null)
                                 continue;
@@ -296,9 +338,6 @@ namespace FinalSiteConstituentsExporter
                             String value = node.InnerText;
 
                             Console.WriteLine(value);
-
-                            if (body.Length > 0)
-                                body.Append(",");
 
                             // Perform transformations
                             if (fields[i,1] == "Relationship" && value == "Primary Contact")
@@ -321,6 +360,43 @@ namespace FinalSiteConstituentsExporter
                             }
 
                             body.Append(value);
+                        }
+
+                        // Handle Addresses
+                        XmlElement addressesElement = constituent["Addresses"];
+                        if (addressesElement != null)
+                        {
+
+                            XmlNodeList addresses = addressesElement.ChildNodes;
+                            if (addresses != null)
+                            {
+                                foreach (XmlNode addressNode in addresses)
+                                {
+                                    String addressTypeStr = "";
+
+                                    XmlNode addressType = addressNode["AddressType"];
+                                    if (addressType != null)
+                                        addressTypeStr = addressType.InnerText;
+
+                                    // Only pull home addresses
+                                    if (addressTypeStr != "Home")
+                                        continue;
+
+                                    for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                                    {
+                                        if (body.Length > 0)
+                                            body.Append(",");
+
+                                        XmlNode nodeA = addressNode[fieldsAddresses[i, 0]];
+                                        if (nodeA == null)
+                                            continue;
+
+                                        String value = nodeA.InnerText;
+
+                                        body.Append(value);
+                                    }
+                                }
+                            }
                         }
 
                         body.AppendLine();

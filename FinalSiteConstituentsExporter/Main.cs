@@ -18,6 +18,8 @@ namespace FinalSiteConstituentsExporter
 {
     public partial class Main : Form
     {
+        Boolean bExportWasRunSuccessfully = false;
+
         public Main()
         {
             InitializeComponent();
@@ -41,10 +43,18 @@ namespace FinalSiteConstituentsExporter
 
         private void SaveOptions()
         {
-            DateTime result = dateTimePicker1.Value;
-            String dateText = result.ToString("MM/dd/yyyy");
+            // Only save this if a successful export was run
+            if (bExportWasRunSuccessfully)
+            {
+                DateTime resultLast = DateTime.Today.AddDays(-1);
+                String dateTextLast = resultLast.ToString("MM/dd/yyyy");
+                Properties.Settings.Default["startDateLast"] = dateTextLast;
 
-            Properties.Settings.Default["startDate"] = dateText;
+                DateTime result = dateTimePicker1.Value;
+                String dateText = result.ToString("MM/dd/yyyy");
+                Properties.Settings.Default["startDate"] = dateText;
+            }
+
             Properties.Settings.Default["outputDir"] = textBoxDir.Text;
             Properties.Settings.Default["userName"] = textBoxUsername.Text;
             Properties.Settings.Default["userPassword"] = textBoxPassword.Text;
@@ -91,6 +101,8 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Export succeeded.";
                     statusStrip.Refresh();
 
+                    bExportWasRunSuccessfully = true;
+
                     MessageBox.Show("Success!  Exported " + rowsExported.ToString() + " rows starting at: " + this.Text + " and wrote files to: " + textBoxDir.Text, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
@@ -122,6 +134,11 @@ namespace FinalSiteConstituentsExporter
             {
                 textBoxDir.Text = folderBrowserDialog1.SelectedPath;
             }
+        }
+
+        private void buttonLastRunDate_Click(object sender, EventArgs e)
+        {
+            dateTimePicker1.Value = DateTime.Parse(Properties.Settings.Default["startDateLast"].ToString());
         }
         
         private String GetAuthToken(String Username, String Password, String apiKey)

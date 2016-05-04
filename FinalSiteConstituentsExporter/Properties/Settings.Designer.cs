@@ -82,5 +82,17 @@ namespace FinalSiteConstituentsExporter.Properties {
                 this["apiKey"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("01/01/2016")]
+        public string startDateLast {
+            get {
+                return ((string)(this["startDateLast"]));
+            }
+            set {
+                this["startDateLast"] = value;
+            }
+        }
     }
 }

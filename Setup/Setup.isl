@@ -340,6 +340,8 @@
 		<col def="S0">ISDotNetInstallerArgsUninstall</col>
 		<col def="S0">ISDotNetInstallerArgsRollback</col>
 		<row><td>FinalSiteConstituentsExporter.Primary_output</td><td>{7593C558-786C-409B-B95D-5AF2CDC05477}</td><td>INSTALLDIR</td><td>2</td><td/><td>finalsiteconstituentsexporte</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>ISX_DEFAULTCOMPONENT</td><td>{61CAC9AF-8E08-48E2-870C-A9C6F6FAEEED}</td><td>INSTALLDIR</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>ISX_DEFAULTCOMPONENT1</td><td>{3347F69E-4FDE-4221-97A8-9552C2AD736A}</td><td>OLA_PARISH</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 	</table>
 
 	<table name="Condition">
@@ -1048,6 +1050,7 @@
 	<table name="CreateFolder">
 		<col key="yes" def="s72">Directory_</col>
 		<col key="yes" def="s72">Component_</col>
+		<row><td>INSTALLDIR</td><td>ISX_DEFAULTCOMPONENT</td></row>
 	</table>
 
 	<table name="CustomAction">
@@ -1861,6 +1864,8 @@
 		<col key="yes" def="s38">Feature_</col>
 		<col key="yes" def="s72">Component_</col>
 		<row><td>AlwaysInstall</td><td>FinalSiteConstituentsExporter.Primary_output</td></row>
+		<row><td>AlwaysInstall</td><td>ISX_DEFAULTCOMPONENT</td></row>
+		<row><td>AlwaysInstall</td><td>ISX_DEFAULTCOMPONENT1</td></row>
 	</table>
 
 	<table name="File">
@@ -1875,6 +1880,9 @@
 		<col def="S255">ISBuildSourcePath</col>
 		<col def="I4">ISAttributes</col>
 		<col def="S72">ISComponentSubFolder_</col>
+		<row><td>church_office_constituents_i1</td><td>ISX_DEFAULTCOMPONENT1</td><td>CHURCH~1.DOC|Church-Office-Constituents-Import-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Church-Office-Constituents-Import-Process.docx</td><td>1</td><td/></row>
+		<row><td>finalsite_constituents_add_n1</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Add-New-Member-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Add-New-Member-Process.docx</td><td>1</td><td/></row>
+		<row><td>finalsite_constituents_expor1</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Export-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Export-Process.docx</td><td>1</td><td/></row>
 		<row><td>finalsiteconstituentsexporte</td><td>FinalSiteConstituentsExporter.Primary_output</td><td>FinalSiteConstituentsExporter.Primary output</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;FinalSiteConstituentsExporter&gt;|Built</td><td>3</td><td/></row>
 	</table>
 
@@ -2020,6 +2028,8 @@
 		<col def="S0">HTTPLocation</col>
 		<col def="S0">Miscellaneous</col>
 		<row><td>FinalSiteConstituentsExporter.Primary_output</td><td/><td/><td>_A6F4845C_67B5_454E_A835_6CA57121F586_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>ISX_DEFAULTCOMPONENT</td><td/><td/><td>_951D55B2_1100_4B2A_9C7C_9971FD00D720_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>ISX_DEFAULTCOMPONENT1</td><td/><td/><td>_4979C15E_7657_41BF_ACD6_94A3C340DF9E_FILTER</td><td/><td/><td/><td/></row>
 	</table>
 
 	<table name="ISCustomActionReference">

@@ -44,6 +44,7 @@
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxApiKey = new System.Windows.Forms.TextBox();
+            this.buttonLastRunDate = new System.Windows.Forms.Button();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -72,7 +73,7 @@
             this.go.Location = new System.Drawing.Point(225, 211);
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(75, 23);
-            this.go.TabIndex = 7;
+            this.go.TabIndex = 8;
             this.go.Text = "&Go";
             this.go.UseVisualStyleBackColor = true;
             this.go.Click += new System.EventHandler(this.go_Click);
@@ -82,7 +83,7 @@
             this.close.Location = new System.Drawing.Point(356, 211);
             this.close.Name = "close";
             this.close.Size = new System.Drawing.Size(75, 23);
-            this.close.TabIndex = 8;
+            this.close.TabIndex = 9;
             this.close.Text = "&Close";
             this.close.UseVisualStyleBackColor = true;
             this.close.Click += new System.EventHandler(this.close_Click);
@@ -101,7 +102,7 @@
             this.textBoxDir.Location = new System.Drawing.Point(161, 60);
             this.textBoxDir.Name = "textBoxDir";
             this.textBoxDir.Size = new System.Drawing.Size(292, 20);
-            this.textBoxDir.TabIndex = 2;
+            this.textBoxDir.TabIndex = 3;
             this.textBoxDir.Text = "c:\\";
             // 
             // chooseDir
@@ -109,7 +110,7 @@
             this.chooseDir.Location = new System.Drawing.Point(459, 58);
             this.chooseDir.Name = "chooseDir";
             this.chooseDir.Size = new System.Drawing.Size(40, 23);
-            this.chooseDir.TabIndex = 3;
+            this.chooseDir.TabIndex = 4;
             this.chooseDir.Text = "...";
             this.chooseDir.UseVisualStyleBackColor = true;
             this.chooseDir.Click += new System.EventHandler(this.chooseDir_Click);
@@ -141,7 +142,7 @@
             this.textBoxUsername.Location = new System.Drawing.Point(161, 97);
             this.textBoxUsername.Name = "textBoxUsername";
             this.textBoxUsername.Size = new System.Drawing.Size(177, 20);
-            this.textBoxUsername.TabIndex = 4;
+            this.textBoxUsername.TabIndex = 5;
             // 
             // textBoxPassword
             // 
@@ -149,7 +150,7 @@
             this.textBoxPassword.Name = "textBoxPassword";
             this.textBoxPassword.PasswordChar = '*';
             this.textBoxPassword.Size = new System.Drawing.Size(177, 20);
-            this.textBoxPassword.TabIndex = 5;
+            this.textBoxPassword.TabIndex = 6;
             // 
             // statusStrip
             // 
@@ -183,13 +184,24 @@
             this.textBoxApiKey.Location = new System.Drawing.Point(161, 172);
             this.textBoxApiKey.Name = "textBoxApiKey";
             this.textBoxApiKey.Size = new System.Drawing.Size(443, 20);
-            this.textBoxApiKey.TabIndex = 6;
+            this.textBoxApiKey.TabIndex = 7;
+            // 
+            // buttonLastRunDate
+            // 
+            this.buttonLastRunDate.Location = new System.Drawing.Point(276, 23);
+            this.buttonLastRunDate.Name = "buttonLastRunDate";
+            this.buttonLastRunDate.Size = new System.Drawing.Size(135, 23);
+            this.buttonLastRunDate.TabIndex = 2;
+            this.buttonLastRunDate.Text = "<- Use Last Run Date -1";
+            this.buttonLastRunDate.UseVisualStyleBackColor = true;
+            this.buttonLastRunDate.Click += new System.EventHandler(this.buttonLastRunDate_Click);
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(656, 268);
+            this.Controls.Add(this.buttonLastRunDate);
             this.Controls.Add(this.textBoxApiKey);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.statusStrip);
@@ -235,6 +247,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBoxApiKey;
+        private System.Windows.Forms.Button buttonLastRunDate;
     }
 }
 

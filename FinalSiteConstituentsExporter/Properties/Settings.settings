@@ -17,5 +17,8 @@
     <Setting Name="apiKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">0357D83A88AA320BE9194A00D753B5686CBC9547AFD0B6A7E54F9C84B064FBAD</Value>
     </Setting>
+    <Setting Name="startDateLast" Type="System.String" Scope="User">
+      <Value Profile="(Default)">01/01/2016</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Web;
@@ -225,6 +226,10 @@ namespace FinalSiteConstituentsExporter
 
                 // Create the web request  
                 HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+                request.Timeout = Timeout.Infinite;
+                request.ReadWriteTimeout = Timeout.Infinite;
+                request.ServicePoint.MaxIdleTime = Timeout.Infinite;
+                request.ServicePoint.ConnectionLeaseTimeout = -1;
 
                 // Set type to POST  
                 request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
@@ -367,10 +372,11 @@ namespace FinalSiteConstituentsExporter
 
                             if (fields[i, 1] == "ActiveFlag")
                             {
+                                // Mark this with a special token so we can replace later
                                 if (value == "Active")
-                                    value = "True";
+                                    value = "***!True!***";
                                 else
-                                    value = "False";
+                                    value = "***!False!***";
                             }
 
                             body.Append(value);
@@ -533,9 +539,20 @@ namespace FinalSiteConstituentsExporter
 
                         body.AppendLine();
 
+                        body = body.Replace("***!True!***", "True");
+
                         // Only write the head of household to the Families file
                         if (bIsHeadofHousehold)
+                        {
+                            // Replace the ActiveFlag with TRUE always for a Family
+                            // since we don't have an active flag for a family, only
+                            // for an individual
+                            body = body.Replace("***!False!***", "True");
+
                             bodyFamilies.Append(body);
+                        }
+                        else
+                            body = body.Replace("***!False!***", "False");
 
                         bodyMembers.Append(body);
                     }

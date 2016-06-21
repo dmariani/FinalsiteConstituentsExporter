@@ -344,17 +344,32 @@ namespace FinalSiteConstituentsExporter
                     {
                         Boolean bIsHeadofHousehold = false;
                         StringBuilder body = new StringBuilder();
+                        String strFamilyID = "";
 
                         for (int i = 0; i < fields.GetLength(0); i++)
                         {
                             if (body.Length > 0)
                                 body.Append(",");
 
+                            String value = "";
+
                             XmlNode node = constituent[fields[i, 0]];
                             if (node == null)
-                                continue;
-
-                            String value = node.InnerText.Replace(",", "");
+                            {
+                                if (fields[i, 1] == "EnvelopeID")
+                                {
+                                    // If the envelopeid is empty, fill it with the
+                                    // the FamilyID + 1,000,000 if FamilyID 
+                                    if (strFamilyID.Length >= 6)
+                                        value = strFamilyID;
+                                    else
+                                        value = "100000" + strFamilyID;
+                                }
+                                else
+                                    continue;
+                            }
+                            else
+                                value = node.InnerText.Replace(",", "");
 
                             Console.WriteLine(value);
 
@@ -377,6 +392,12 @@ namespace FinalSiteConstituentsExporter
                                     value = "***!True!***";
                                 else
                                     value = "***!False!***";
+                            }
+
+                            // Save FamilyID for later
+                            if (fields[i, 1] == "FamilyID")
+                            {
+                                strFamilyID = value;
                             }
 
                             body.Append(value);

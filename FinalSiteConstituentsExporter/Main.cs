@@ -389,9 +389,9 @@ namespace FinalSiteConstituentsExporter
                             {
                                 // Mark this with a special token so we can replace later
                                 if (value == "Active")
-                                    value = "***!True!***";
+                                    value = "True";
                                 else
-                                    value = "***!False!***";
+                                    value = "False";
                             }
 
                             // Save FamilyID for later
@@ -560,20 +560,11 @@ namespace FinalSiteConstituentsExporter
 
                         body.AppendLine();
 
-                        body = body.Replace("***!True!***", "True");
-
                         // Only write the head of household to the Families file
                         if (bIsHeadofHousehold)
                         {
-                            // Replace the ActiveFlag with TRUE always for a Family
-                            // since we don't have an active flag for a family, only
-                            // for an individual
-                            body = body.Replace("***!False!***", "True");
-
                             bodyFamilies.Append(body);
                         }
-                        else
-                            body = body.Replace("***!False!***", "False");
 
                         bodyMembers.Append(body);
                     }

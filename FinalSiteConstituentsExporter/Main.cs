@@ -345,6 +345,7 @@ namespace FinalSiteConstituentsExporter
                         Boolean bIsHeadofHousehold = false;
                         StringBuilder body = new StringBuilder();
                         String strFamilyID = "";
+                        String strMemberID = "";
 
                         for (int i = 0; i < fields.GetLength(0); i++)
                         {
@@ -359,11 +360,13 @@ namespace FinalSiteConstituentsExporter
                                 if (fields[i, 1] == "EnvelopeID")
                                 {
                                     // If the envelopeid is empty, fill it with the
-                                    // the FamilyID + 1,000,000 if FamilyID 
-                                    if (strFamilyID.Length >= 6)
+                                    // the "none-" + FamilyID or MemberID
+                                    if (strFamilyID.Length == 0)
+                                        value = "nonem-" + strMemberID;
+                                    else if (strFamilyID.Length >= 6)
                                         value = strFamilyID;
                                     else
-                                        value = "100000" + strFamilyID;
+                                        value = "none-" + strFamilyID;
                                 }
                                 else
                                     continue;
@@ -383,6 +386,7 @@ namespace FinalSiteConstituentsExporter
                             if (fields[i, 1] == "MemberID")
                             {
                                 value = value.Replace("fs_", "");
+                                strMemberID = value;
                             }
 
                             if (fields[i, 1] == "ActiveFlag")

@@ -687,7 +687,8 @@ namespace FinalSiteConstituentsExporter
 
                 // Now this record to the Dictionary
                 //
-                dictionarySpouses.Add(ImportID_Household, FirstName + ":" + LastName);
+                if (!dictionarySpouses.ContainsKey(ImportID_Household))
+                    dictionarySpouses.Add(ImportID_Household, FirstName + ":" + LastName);
             }
         }
         void GetMissingSpouses(String token, Dictionary<String, String> dictionarySpouses, List<String> MissingSpousesAr)

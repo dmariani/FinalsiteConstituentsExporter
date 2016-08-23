@@ -1051,6 +1051,7 @@
 		<col key="yes" def="s72">Directory_</col>
 		<col key="yes" def="s72">Component_</col>
 		<row><td>INSTALLDIR</td><td>ISX_DEFAULTCOMPONENT</td></row>
+		<row><td>OLA_PARISH</td><td>ISX_DEFAULTCOMPONENT1</td></row>
 	</table>
 
 	<table name="CustomAction">
@@ -1880,9 +1881,9 @@
 		<col def="S255">ISBuildSourcePath</col>
 		<col def="I4">ISAttributes</col>
 		<col def="S72">ISComponentSubFolder_</col>
-		<row><td>church_office_constituents_i1</td><td>ISX_DEFAULTCOMPONENT1</td><td>CHURCH~1.DOC|Church-Office-Constituents-Import-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Church-Office-Constituents-Import-Process.docx</td><td>1</td><td/></row>
-		<row><td>finalsite_constituents_add_n1</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Add-New-Member-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Add-New-Member-Process.docx</td><td>1</td><td/></row>
-		<row><td>finalsite_constituents_expor1</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Export-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\AtScale\Documents\Visual Studio 2013\Projects\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Export-Process.docx</td><td>1</td><td/></row>
+		<row><td>church_office_constituents_i</td><td>ISX_DEFAULTCOMPONENT1</td><td>CHURCH~1.DOC|Church-Office-Constituents-Import-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\dmariani\Documents\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Church-Office-Constituents-Import-Process.docx</td><td>1</td><td/></row>
+		<row><td>finalsite_constituents_add_n</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Add-New-Member-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\dmariani\Documents\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Add-New-Member-Process.docx</td><td>1</td><td/></row>
+		<row><td>finalsite_constituents_expor</td><td>ISX_DEFAULTCOMPONENT1</td><td>FINALS~1.DOC|Finalsite-Constituents-Export-Process.docx</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Users\dmariani\Documents\FinalsiteConstituentsExporter\FinalSiteConstituentsExporter\Documentation\Finalsite-Constituents-Export-Process.docx</td><td>1</td><td/></row>
 		<row><td>finalsiteconstituentsexporte</td><td>FinalSiteConstituentsExporter.Primary_output</td><td>FinalSiteConstituentsExporter.Primary output</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;FinalSiteConstituentsExporter&gt;|Built</td><td>3</td><td/></row>
 	</table>
 
@@ -2341,12 +2342,6 @@
 		<row><td>WindowsFolder</td><td/><td/><td>1</td></row>
 	</table>
 
-	<table name="ISPowerShellWrap">
-		<col key="yes" def="s72">Action_</col>
-		<col key="yes" def="s72">Name</col>
-		<col def="S0">Value</col>
-	</table>
-
 	<table name="ISProductConfiguration">
 		<col key="yes" def="s72">ISProductConfiguration</col>
 		<col def="S255">ProductConfigurationFlags</col>
@@ -2614,7 +2609,8 @@
 		<col def="I2">Order</col>
 		<col def="I2">ISSetupLocation</col>
 		<col def="S255">ISReleaseFlags</col>
-		<row><td>_17F7FABC_FA51_4436_9481_636FBC274EB1_</td><td>Microsoft Visual C++ 2013 Redistributable Package (x86).prq</td><td/><td/><td/></row>
+		<row><td>_1C2D67E3_B033_4604_97DA_F5DD167887FA_</td><td>Microsoft Visual C++ 2015 Redistributable Package (x86).prq</td><td/><td/><td/></row>
+		<row><td>_ECAB074A_D2B4_47A8_AEC2_B9E023EE738A_</td><td>Microsoft Visual C++ 2015 Redistributable Package (x64).prq</td><td/><td/><td/></row>
 	</table>
 
 	<table name="ISSetupType">
@@ -3817,6 +3813,12 @@
 		<col def="s255">Value</col>
 	</table>
 
+	<table name="ISWSEWrap">
+		<col key="yes" def="s72">Action_</col>
+		<col key="yes" def="s72">Name</col>
+		<col def="S0">Value</col>
+	</table>
+
 	<table name="ISXmlElement">
 		<col key="yes" def="s72">ISXmlElement</col>
 		<col def="s72">ISXmlFile_</col>
@@ -3990,7 +3992,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>ISTheme</td><td>InstallShield Blue.theme</td></row>
 		<row><td>ISUSLock</td><td>{B3FAC303-B496-429D-9B97-303F48D74713}</td></row>
 		<row><td>ISUSSignature</td><td>{68554DE0-15B9-4F75-B0FA-6DD3231BBC65}</td></row>
-		<row><td>ISVisitedViews</td><td>viewAssistant,viewShortcuts,viewAppFiles,viewObjects,viewDependencies,viewISToday</td></row>
+		<row><td>ISVisitedViews</td><td>viewAssistant,viewShortcuts,viewAppFiles,viewObjects,viewDependencies,viewISToday,viewProject</td></row>
 		<row><td>Limited</td><td>1</td></row>
 		<row><td>LockPermissionMode</td><td>1</td></row>
 		<row><td>MsiExecCmdLineOptions</td><td/></row>
@@ -4002,7 +4004,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>SaveAsSchema</td><td/></row>
 		<row><td>SccEnabled</td><td>0</td></row>
 		<row><td>SccPath</td><td/></row>
-		<row><td>SchemaVersion</td><td>774</td></row>
+		<row><td>SchemaVersion</td><td>776</td></row>
 		<row><td>Type</td><td>MSIE</td></row>
 	</table>
 
@@ -5130,9 +5132,6 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>ISPathVariable</td><td>TestValue</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>The test value of the path variable.</td></row>
 		<row><td>ISPathVariable</td><td>Type</td><td>N</td><td/><td/><td/><td/><td/><td>1;2;4;8</td><td>The type of the path variable.</td></row>
 		<row><td>ISPathVariable</td><td>Value</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>The value of the path variable.</td></row>
-		<row><td>ISPowerShellWrap</td><td>Action_</td><td>N</td><td/><td/><td>CustomAction</td><td>1</td><td>Identifier</td><td/><td>Foreign key into CustomAction table</td></row>
-		<row><td>ISPowerShellWrap</td><td>Name</td><td>N</td><td/><td/><td/><td/><td>Text</td><td/><td>Property associated with this Action</td></row>
-		<row><td>ISPowerShellWrap</td><td>Value</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Value associated with this Property</td></row>
 		<row><td>ISProductConfiguration</td><td>GeneratePackageCode</td><td>Y</td><td/><td/><td/><td/><td>Number</td><td>0;1</td><td>Indicates whether or not to generate a package code.</td></row>
 		<row><td>ISProductConfiguration</td><td>ISProductConfiguration</td><td>N</td><td/><td/><td/><td/><td>Text</td><td/><td>The name of the product configuration.</td></row>
 		<row><td>ISProductConfiguration</td><td>ProductConfigurationFlags</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Product configuration (release) flags.</td></row>
@@ -5370,6 +5369,9 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>ISVirtualShortcut</td><td>Name</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Property name</td></row>
 		<row><td>ISVirtualShortcut</td><td>Shortcut_</td><td>N</td><td/><td/><td>Shortcut</td><td>1</td><td>Identifier</td><td/><td>Foreign key into Shortcut table.</td></row>
 		<row><td>ISVirtualShortcut</td><td>Value</td><td>N</td><td/><td/><td/><td/><td/><td/><td>Property value</td></row>
+		<row><td>ISWSEWrap</td><td>Action_</td><td>N</td><td/><td/><td>CustomAction</td><td>1</td><td>Identifier</td><td/><td>Foreign key into CustomAction table</td></row>
+		<row><td>ISWSEWrap</td><td>Name</td><td>N</td><td/><td/><td/><td/><td>Text</td><td/><td>Property associated with this Action</td></row>
+		<row><td>ISWSEWrap</td><td>Value</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Value associated with this Property</td></row>
 		<row><td>ISXmlElement</td><td>Content</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Element contents</td></row>
 		<row><td>ISXmlElement</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td>Number</td><td/><td>Internal XML element attributes</td></row>
 		<row><td>ISXmlElement</td><td>ISXmlElement</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Primary key, non-localized, internal token for Xml element</td></row>

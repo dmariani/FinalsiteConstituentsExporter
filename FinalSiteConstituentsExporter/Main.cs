@@ -141,14 +141,14 @@ namespace FinalSiteConstituentsExporter
         {
             dateTimePicker1.Value = DateTime.Parse(Properties.Settings.Default["startDateLast"].ToString());
         }
-        
+
         private String GetAuthToken(String Username, String Password, String apiKey)
         {
             String Token = "";
 
             try
             {
-              // We use the HttpUtility class from the System.Web namespace  
+                // We use the HttpUtility class from the System.Web namespace  
                 Uri address = new Uri("https://www.ola.community/api/apilogin/apilogin.cfm");
 
                 // Create the web request  
@@ -256,10 +256,10 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Writing data to files...";
                     statusStrip.Refresh();
 
-                    string[,] fields = new string[13, 2] { 
+                    string[,] fields = new string[15, 2] {
                     { "ImportID", "MemberID" },
                     { "BusRoute", "FamilyID" },
-                    { "FirstName", "FirstName" }, 
+                    { "FirstName", "FirstName" },
                     { "MiddleName", "MiddleName" },
                     { "LastName", "LastName" },
                     { "NameSuffix", "NameSuffix" },
@@ -270,9 +270,11 @@ namespace FinalSiteConstituentsExporter
                     { "DateEnrolled", "DateEnrolled" },
                     { "BirthDate", "BirthDate" },
                     { "MaritalStatus", "MaritalStatus" },
+                    { "SpouseFirstName", "SpouseFirstName" },
+                    { "SpouseLastName", "SpouseLastName" },
                     };
 
-                    string[,] fieldsAddresses = new string[5, 2] { 
+                    string[,] fieldsAddresses = new string[5, 2] {
                     { "Address1", "Address1" }, // Addresses/Address/AddressType: Home
                     { "Address2", "Address2" },
                     { "City", "City" },
@@ -280,16 +282,16 @@ namespace FinalSiteConstituentsExporter
                     { "Zip", "Zip" },
                     };
 
-                    string[,] fieldsPhones = new string[3, 2] { 
+                    string[,] fieldsPhones = new string[3, 2] {
                     { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Mobile, School
-                    { "PhoneNumber", "PhoneNumber-Mobile" }, 
+                    { "PhoneNumber", "PhoneNumber-Mobile" },
                     { "PhoneNumber", "PhoneNumber-School" },
                     };
 
-                    string[,] fieldsEmails = new string[4, 2] { 
+                    string[,] fieldsEmails = new string[4, 2] {
                     { "Email", "Email-Primary" }, // Emails/Email/EmailType: Home, Work, School
                     { "Email", "Email-Home" },
-                    { "Email", "Email-Work" }, 
+                    { "Email", "Email-Work" },
                     { "Email", "Email-School" },
                     };
 
@@ -297,7 +299,7 @@ namespace FinalSiteConstituentsExporter
                     StringBuilder bodyMembers = new StringBuilder();
 
                     StringBuilder header = new StringBuilder();
-                    
+
                     // Write headers for main info
                     for (int i = 0; i < fields.GetLength(0); i++)
                     {
@@ -338,14 +340,55 @@ namespace FinalSiteConstituentsExporter
                     bodyFamilies.Append(header);
                     bodyMembers.Append(header);
 
-                    // Write the body records
+                    // First, we need to roll through all the records and find spouses
+                    // and put them into a map
+                    Dictionary<String, String> dictionarySpouses = new Dictionary<String, String>();
+                    FillSpousesCollection(doc, dictionarySpouses, ns);
+
+                    // Now look for missing missing spouses so we can look them up later
+                    //
+                    List<String> MissingSpousesAr = new List<String>();
+
                     XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
+                    foreach (XmlNode constituent in constituents)
+                    {
+                        String ImportID_Household = "";
+
+                        // Get the ImportIDHousehold
+                        XmlNode nodeImportID_Household = constituent["ImportID_Household"];
+                        if (nodeImportID_Household != null)
+                            ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
+
+                        // Get the relationship
+                        XmlNode nodeRelationship = constituent["Custom3"];
+                        if (nodeRelationship == null)
+                            continue;
+
+                        String Relationship = nodeRelationship.InnerText.Replace(",", "");
+                        if (Relationship != "Primary Contact" && Relationship != "Head of Household")
+                            continue;
+
+                        if (!dictionarySpouses.ContainsKey(ImportID_Household))
+                            MissingSpousesAr.Add(ImportID_Household);
+                    }
+
+                    // Now go get the missing Spouses and add them to dictionarySpouses Collection
+                    //
+                    GetMissingSpouses(token, dictionarySpouses, MissingSpousesAr);
+
+                    // Now process the Families and Individuals records
                     foreach (XmlNode constituent in constituents)
                     {
                         Boolean bIsHeadofHousehold = false;
                         StringBuilder body = new StringBuilder();
                         String strFamilyID = "";
                         String strMemberID = "";
+                        String ImportID_Household = "";
+
+                        // Get the ImportIDHousehold
+                        XmlNode nodeImportID_Household = constituent["ImportID_Household"];
+                        if (nodeImportID_Household != null)
+                            ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
 
                         for (int i = 0; i < fields.GetLength(0); i++)
                         {
@@ -368,6 +411,24 @@ namespace FinalSiteConstituentsExporter
                                     else
                                         value = "none-" + strFamilyID;
                                 }
+                                else if (fields[i, 1] == "SpouseFirstName")
+                                {
+                                    if (dictionarySpouses.ContainsKey(ImportID_Household))
+                                    {
+                                        string[] FirstLastAr = dictionarySpouses[ImportID_Household].Split(':');
+                                        if (FirstLastAr.Length == 2)
+                                            value = FirstLastAr[0];
+                                    }
+                                }
+                                else if (fields[i, 1] == "SpouseLastName")
+                                {
+                                    if (dictionarySpouses.ContainsKey(ImportID_Household))
+                                    {
+                                        string[] FirstLastAr = dictionarySpouses[ImportID_Household].Split(':');
+                                        if (FirstLastAr.Length == 2)
+                                            value = FirstLastAr[1];
+                                    }
+                                }
                                 else
                                     continue;
                             }
@@ -377,7 +438,7 @@ namespace FinalSiteConstituentsExporter
                             Console.WriteLine(value);
 
                             // Perform transformations
-                            if (fields[i,1] == "Relationship" && value == "Primary Contact")
+                            if (fields[i, 1] == "Relationship" && value == "Primary Contact")
                             {
                                 bIsHeadofHousehold = true;
                                 value = "Head of Household";
@@ -444,7 +505,7 @@ namespace FinalSiteConstituentsExporter
                                         if (nodeA == null)
                                             continue;
 
-                                        String value = nodeA.InnerText.Replace(",","");
+                                        String value = nodeA.InnerText.Replace(",", "");
 
                                         body.Append(value);
                                     }
@@ -486,7 +547,7 @@ namespace FinalSiteConstituentsExporter
                             String value = dictionaryPhones["Home"];
                             body.Append(value);
                         }
-                        
+
                         body.Append(",");
                         if (dictionaryPhones.ContainsKey("Mobile"))
                         {
@@ -579,6 +640,118 @@ namespace FinalSiteConstituentsExporter
                 }
 
                 return rowsExported;
+            }
+            catch (WebException ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        void FillSpousesCollection(XmlDocument doc, Dictionary<String, String> dictionarySpouses, XmlNamespaceManager ns)
+        {
+            XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
+            foreach (XmlNode constituent in constituents)
+            {
+                String ImportID_Household = "";
+
+                // Get the ImportIDHousehold
+                XmlNode nodeImportID_Household = constituent["ImportID_Household"];
+                if (nodeImportID_Household != null)
+                    ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
+
+                // Get the relationship
+                XmlNode nodeRelationship = constituent["Custom3"];
+                if (nodeRelationship == null)
+                    continue;
+
+                String Relationship = nodeRelationship.InnerText.Replace(",", "");
+                if (Relationship != "Spouse")
+                    continue;
+
+                // Get the FirstName
+                XmlNode nodeFirstName = constituent["FirstName"];
+                if (nodeFirstName == null)
+                    continue;
+
+                // Get the LastName
+                XmlNode nodeLastName = constituent["LastName"];
+                if (nodeLastName == null)
+                    continue;
+
+                String FirstName = nodeFirstName.InnerText.Replace(",", "");
+                String LastName = nodeLastName.InnerText.Replace(",", "");
+
+                // Now this record to the Dictionary
+                //
+                dictionarySpouses.Add(ImportID_Household, FirstName + ":" + LastName);
+            }
+        }
+        void GetMissingSpouses(String token, Dictionary<String, String> dictionarySpouses, List<String> MissingSpousesAr)
+        {
+            try
+            {
+                // Get 100 at a time
+                List<String> MissingSpousesBatchAr = new List<String>();
+                StringBuilder Households = new StringBuilder();
+                for (int i = 0; i < MissingSpousesAr.Count; i++)
+                {
+                    if (Households.Length > 0)
+                        Households.Append(",");
+
+                    Households.Append(MissingSpousesAr[i]);
+
+                    if ((Households.Length % 100) == 0)
+                    {
+                        MissingSpousesBatchAr.Add(Households.ToString());
+                        Households.Clear();
+                    }
+                }
+
+                MissingSpousesBatchAr.Add(Households.ToString());
+
+                for (int i=0; i< MissingSpousesBatchAr.Count; i++)
+                {
+                    // We use the HttpUtility class from the System.Web namespace  
+                    String uri = "https://www.ola.community/api/constituents/constituents.cfm";
+                    uri += "?ImportIDList_Household=" + MissingSpousesBatchAr[i].ToString();
+
+                    Uri address = new Uri(uri);
+
+                    // Create the web request  
+                    HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+                    request.Timeout = Timeout.Infinite;
+                    request.ReadWriteTimeout = Timeout.Infinite;
+                    request.ServicePoint.MaxIdleTime = Timeout.Infinite;
+                    request.ServicePoint.ConnectionLeaseTimeout = -1;
+
+                    // Set type to POST  
+                    request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
+
+                    // Get response  
+                    using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                    {
+                        XmlDocument doc = new XmlDocument();
+                        doc.Load(response.GetResponseStream());
+
+                        XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+                        ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
+
+                        XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
+                        if (nodeSuccess.InnerText != "True")
+                        {
+                            XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                            throw new Exception("Error reading data from Finalsite. Error=" + nodeResultError.InnerText);
+                        }
+
+                        XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
+
+                        FillSpousesCollection(doc, dictionarySpouses, ns);
+                    }
+                }
             }
             catch (WebException ex)
             {

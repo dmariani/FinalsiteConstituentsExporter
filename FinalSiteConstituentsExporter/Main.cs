@@ -352,12 +352,12 @@ namespace FinalSiteConstituentsExporter
                     XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
                     foreach (XmlNode constituent in constituents)
                     {
-                        String ImportID_Household = "";
+                        String FamilyId = "";
 
                         // Get the ImportIDHousehold
-                        XmlNode nodeImportID_Household = constituent["ImportID_Household"];
-                        if (nodeImportID_Household != null)
-                            ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
+                        XmlNode nodeFamilyId = constituent["BusRoute"];
+                        if (nodeFamilyId != null)
+                            FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
 
                         // Get the relationship
                         XmlNode nodeRelationship = constituent["Custom3"];
@@ -368,8 +368,8 @@ namespace FinalSiteConstituentsExporter
                         if (Relationship != "Primary Contact" && Relationship != "Head of Household")
                             continue;
 
-                        if (!dictionarySpouses.ContainsKey(ImportID_Household))
-                            MissingSpousesAr.Add(ImportID_Household);
+                        if (!dictionarySpouses.ContainsKey(FamilyId))
+                            MissingSpousesAr.Add(FamilyId);
                     }
 
                     // Now go get the missing Spouses and add them to dictionarySpouses Collection
@@ -383,12 +383,12 @@ namespace FinalSiteConstituentsExporter
                         StringBuilder body = new StringBuilder();
                         String strFamilyID = "";
                         String strMemberID = "";
-                        String ImportID_Household = "";
+                        String FamilyId = "";
 
                         // Get the ImportIDHousehold
-                        XmlNode nodeImportID_Household = constituent["ImportID_Household"];
-                        if (nodeImportID_Household != null)
-                            ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
+                        XmlNode nodeFamilyId = constituent["BusRoute"];
+                        if (nodeFamilyId != null)
+                            FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
 
                         for (int i = 0; i < fields.GetLength(0); i++)
                         {
@@ -413,18 +413,18 @@ namespace FinalSiteConstituentsExporter
                                 }
                                 else if (fields[i, 1] == "SpouseFirstName")
                                 {
-                                    if (dictionarySpouses.ContainsKey(ImportID_Household))
+                                    if (dictionarySpouses.ContainsKey(FamilyId))
                                     {
-                                        string[] FirstLastAr = dictionarySpouses[ImportID_Household].Split(':');
+                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
                                         if (FirstLastAr.Length == 2)
                                             value = FirstLastAr[0];
                                     }
                                 }
                                 else if (fields[i, 1] == "SpouseLastName")
                                 {
-                                    if (dictionarySpouses.ContainsKey(ImportID_Household))
+                                    if (dictionarySpouses.ContainsKey(FamilyId))
                                     {
-                                        string[] FirstLastAr = dictionarySpouses[ImportID_Household].Split(':');
+                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
                                         if (FirstLastAr.Length == 2)
                                             value = FirstLastAr[1];
                                     }
@@ -656,12 +656,12 @@ namespace FinalSiteConstituentsExporter
             XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
             foreach (XmlNode constituent in constituents)
             {
-                String ImportID_Household = "";
+                String FamilyId = "";
 
                 // Get the ImportIDHousehold
-                XmlNode nodeImportID_Household = constituent["ImportID_Household"];
-                if (nodeImportID_Household != null)
-                    ImportID_Household = nodeImportID_Household.InnerText.Replace(",", ""); ;
+                XmlNode nodeFamilyId = constituent["BusRoute"];
+                if (nodeFamilyId != null)
+                    FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
 
                 // Get the relationship
                 XmlNode nodeRelationship = constituent["Custom3"];
@@ -687,8 +687,8 @@ namespace FinalSiteConstituentsExporter
 
                 // Now this record to the Dictionary
                 //
-                if (!dictionarySpouses.ContainsKey(ImportID_Household))
-                    dictionarySpouses.Add(ImportID_Household, FirstName + ":" + LastName);
+                if (!dictionarySpouses.ContainsKey(FamilyId))
+                    dictionarySpouses.Add(FamilyId, FirstName + ":" + LastName);
             }
         }
         void GetMissingSpouses(String token, Dictionary<String, String> dictionarySpouses, List<String> MissingSpousesAr)

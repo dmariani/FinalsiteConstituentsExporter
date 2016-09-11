@@ -198,13 +198,7 @@ namespace FinalSiteConstituentsExporter
             }
             catch (WebException ex)
             {
-                using (var stream = ex.Response.GetResponseStream())
-                using (var reader = new StreamReader(stream))
-                {
-                    Console.WriteLine(reader.ReadToEnd());
-                    Exception newex = new Exception(reader.ToString());
-                    throw newex;
-                }
+                throw new Exception(ex.Message);
             }
             catch (Exception ex)
             {
@@ -340,14 +334,14 @@ namespace FinalSiteConstituentsExporter
                     bodyFamilies.Append(header);
                     bodyMembers.Append(header);
 
-                    // First, we need to roll through all the records and find spouses
+                    // First, we need to roll through all the records and find households
                     // and put them into a map
                     Dictionary<String, String> dictionarySpouses = new Dictionary<String, String>();
-                    FillSpousesCollection(doc, dictionarySpouses, ns);
+                    Dictionary<String, XmlElement> dictionaryAddresses = new Dictionary<String, XmlElement>();
 
-                    // Now look for missing missing spouses so we can look them up later
-                    //
-                    List<String> MissingSpousesAr = new List<String>();
+//                    FillSpousesCollection(doc, dictionarySpouses, ns);
+
+                    List<String> HouseholdsAr = new List<String>();
 
                     XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
                     foreach (XmlNode constituent in constituents)
@@ -369,12 +363,16 @@ namespace FinalSiteConstituentsExporter
                             continue;
 
                         if (!dictionarySpouses.ContainsKey(FamilyId))
-                            MissingSpousesAr.Add(FamilyId);
+                            HouseholdsAr.Add(FamilyId);
                     }
 
                     // Now go get the missing Spouses and add them to dictionarySpouses Collection
                     //
-                    GetMissingSpouses(token, dictionarySpouses, MissingSpousesAr);
+                    GetMissingInfo(token, "constituents", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
+
+                    // Now get any missing addresses for those whose addresses are shared
+                    //
+                    GetMissingInfo(token, "households", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
 
                     // Now process the Families and Individuals records
                     foreach (XmlNode constituent in constituents)
@@ -472,11 +470,34 @@ namespace FinalSiteConstituentsExporter
                         XmlElement addressesElement = constituent["Addresses"];
                         if (addressesElement == null)
                         {
-                            // Need to make sure we have placeholders if their is no address
-                            for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                            // Lookup our missing addresses from our collection
+                            //
+                            if (dictionaryAddresses.ContainsKey(FamilyId))
                             {
-                                if (body.Length > 0)
-                                    body.Append(",");
+                                addressesElement = dictionaryAddresses[FamilyId];
+
+                                for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                                {
+                                    if (body.Length > 0)
+                                        body.Append(",");
+
+                                    XmlNode nodeA = addressesElement[fieldsAddresses[i, 0]];
+                                    if (nodeA == null)
+                                        continue;
+
+                                    String value = nodeA.InnerText.Replace(",", "");
+
+                                    body.Append(value);
+                                }
+                            }
+                            else
+                            {
+                                // Need to make sure we have placeholders if their is no address
+                                for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                                {
+                                    if (body.Length > 0)
+                                        body.Append(",");
+                                }
                             }
                         }
                         else
@@ -661,7 +682,7 @@ namespace FinalSiteConstituentsExporter
                 // Get the ImportIDHousehold
                 XmlNode nodeFamilyId = constituent["BusRoute"];
                 if (nodeFamilyId != null)
-                    FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
+                    FamilyId = nodeFamilyId.InnerText.Replace(",", "");
 
                 // Get the relationship
                 XmlNode nodeRelationship = constituent["Custom3"];
@@ -691,34 +712,56 @@ namespace FinalSiteConstituentsExporter
                     dictionarySpouses.Add(FamilyId, FirstName + ":" + LastName);
             }
         }
-        void GetMissingSpouses(String token, Dictionary<String, String> dictionarySpouses, List<String> MissingSpousesAr)
+        void FillAddressesCollection(XmlDocument doc, Dictionary<String, XmlElement> dictionaryAddresses, XmlNamespaceManager ns)
+        {
+            XmlNodeList households = doc.SelectNodes("//ResultSet/Households/Household", ns);
+            foreach (XmlNode household in households)
+            {
+                String FamilyId = "";
+
+                // Get the ImportIDHousehold
+                XmlNode nodeFamilyId = household["ImportID"];
+                if (nodeFamilyId != null)
+                    FamilyId = nodeFamilyId.InnerText.Replace(",", "");
+
+                XmlElement addressesElement = household["Address"];
+                if (addressesElement != null)
+                {
+                    // Now this record to the Dictionary
+                    //
+                    if (!dictionaryAddresses.ContainsKey(FamilyId))
+                        dictionaryAddresses.Add(FamilyId, addressesElement);
+                }
+            }
+        }
+        void GetMissingInfo(String token, String apiName, Dictionary<String, String> dictionarySpouses, Dictionary<String, XmlElement> dictionaryAddresses, List<String> HouseholdsAr)
         {
             try
             {
                 // Get 100 at a time
-                List<String> MissingSpousesBatchAr = new List<String>();
+                List<String> HouseholdsBatchAr = new List<String>();
                 StringBuilder Households = new StringBuilder();
-                for (int i = 0; i < MissingSpousesAr.Count; i++)
+                for (int i = 0; i < HouseholdsAr.Count; i++)
                 {
                     if (Households.Length > 0)
                         Households.Append(",");
 
-                    Households.Append(MissingSpousesAr[i]);
+                    Households.Append(HouseholdsAr[i]);
 
                     if ((Households.Length % 100) == 0)
                     {
-                        MissingSpousesBatchAr.Add(Households.ToString());
+                        HouseholdsBatchAr.Add(Households.ToString());
                         Households.Clear();
                     }
                 }
 
-                MissingSpousesBatchAr.Add(Households.ToString());
+                HouseholdsBatchAr.Add(Households.ToString());
 
-                for (int i=0; i< MissingSpousesBatchAr.Count; i++)
+                for (int i=0; i< HouseholdsBatchAr.Count; i++)
                 {
                     // We use the HttpUtility class from the System.Web namespace  
-                    String uri = "https://www.ola.community/api/constituents/constituents.cfm";
-                    uri += "?ImportIDList_Household=" + MissingSpousesBatchAr[i].ToString();
+                    String uri = "https://www.ola.community/api/constituents/" + apiName + ".cfm";
+                    uri += "?ImportIDList_Household=" + HouseholdsBatchAr[i].ToString();
 
                     Uri address = new Uri(uri);
 
@@ -750,7 +793,10 @@ namespace FinalSiteConstituentsExporter
 
                         XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
 
-                        FillSpousesCollection(doc, dictionarySpouses, ns);
+                        if (apiName == "constituents")
+                            FillSpousesCollection(doc, dictionarySpouses, ns);
+                        else if (apiName == "households")
+                            FillAddressesCollection(doc, dictionaryAddresses, ns);
                     }
                 }
             }

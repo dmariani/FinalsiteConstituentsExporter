@@ -349,7 +349,7 @@ namespace FinalSiteConstituentsExporter
                         String FamilyId = "";
 
                         // Get the ImportIDHousehold
-                        XmlNode nodeFamilyId = constituent["BusRoute"];
+                        XmlNode nodeFamilyId = constituent["ImportID_Household"];
                         if (nodeFamilyId != null)
                             FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
 
@@ -384,7 +384,7 @@ namespace FinalSiteConstituentsExporter
                         String FamilyId = "";
 
                         // Get the ImportIDHousehold
-                        XmlNode nodeFamilyId = constituent["BusRoute"];
+                        XmlNode nodeFamilyId = constituent["ImportID_Household"];
                         if (nodeFamilyId != null)
                             FamilyId = nodeFamilyId.InnerText.Replace(",", ""); ;
 
@@ -680,7 +680,7 @@ namespace FinalSiteConstituentsExporter
                 String FamilyId = "";
 
                 // Get the ImportIDHousehold
-                XmlNode nodeFamilyId = constituent["BusRoute"];
+                XmlNode nodeFamilyId = constituent["ImportID_Household"];
                 if (nodeFamilyId != null)
                     FamilyId = nodeFamilyId.InnerText.Replace(",", "");
 

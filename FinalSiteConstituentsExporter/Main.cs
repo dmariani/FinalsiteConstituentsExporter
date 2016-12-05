@@ -215,6 +215,7 @@ namespace FinalSiteConstituentsExporter
                 // We use the HttpUtility class from the System.Web namespace  
                 String uri = "https://www.ola.community/api/constituents/constituents.cfm";
                 uri += "?ModifiedDate=" + dateText;
+                uri += "&ValidateResult=false";
 
                 Uri address = new Uri(uri);
 

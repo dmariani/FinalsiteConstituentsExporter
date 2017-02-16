@@ -251,7 +251,7 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Writing data to files...";
                     statusStrip.Refresh();
 
-                    string[,] fields = new string[15, 2] {
+                    string[,] fields = new string[17, 2] {
                     { "ConstituentID", "MemberID" },
                     { "ImportID_Household", "FamilyID" },
                     { "FirstName", "FirstName" },
@@ -267,6 +267,8 @@ namespace FinalSiteConstituentsExporter
                     { "MaritalStatus", "MaritalStatus" },
                     { "SpouseFirstName", "SpouseFirstName" },
                     { "SpouseLastName", "SpouseLastName" },
+                    { "InformalSalutationFamily", "InformalSalutationFamily" },
+                    { "InformalSalutationIndividual", "InformalSalutationIndividual" },
                     };
 
                     string[,] fieldsAddresses = new string[5, 2] {
@@ -378,6 +380,7 @@ namespace FinalSiteConstituentsExporter
                         StringBuilder body = new StringBuilder();
                         String MemberId = "";
                         String FamilyId = "";
+                        String FirstName = "";
 
                         // Get the ImportIDHousehold
                         // Get the HouseholdID
@@ -431,6 +434,33 @@ namespace FinalSiteConstituentsExporter
                                             value = FirstLastAr[1];
                                     }
                                 }
+                                else if (fields[i, 1] == "InformalSalutationFamily" && bIsHeadofHousehold == true)
+                                {
+                                    if (dictionarySpouses.ContainsKey(FamilyId))
+                                    {
+                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
+                                        if (FirstLastAr.Length == 2)
+                                        {
+                                            String SpouseFirstName = FirstLastAr[0];
+                                            if (FirstName.Length > 0)
+                                            {
+                                                value = FirstName;
+                                                if (SpouseFirstName.Length > 0)
+                                                {
+                                                    value += " & " + SpouseFirstName;
+                                                }
+                                            } 
+                                        }
+                                    }
+                                    else
+                                    {
+                                        value = FirstName;
+                                    }
+                                }
+                                else if (fields[i, 1] == "InformalSalutationIndividual" || fields[i, 1] == "InformalSalutationFamily")
+                                {
+                                    value = FirstName;
+                                }
                                 else if (fields[i, 1] == "FamilyID")
                                 {
                                     value = FamilyId;
@@ -468,6 +498,12 @@ namespace FinalSiteConstituentsExporter
                             if (fields[i, 1] == "FamilyID")
                             {
                                 value = FamilyId;
+                            }
+
+                            // Save FirstName for later
+                            if (fields[i, 1] == "FirstName")
+                            {
+                                FirstName = value;
                             }
 
                             body.Append(value);

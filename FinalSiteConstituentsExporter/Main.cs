@@ -14,6 +14,9 @@ using System.Net;
 using System.IO;
 using System.Xml;
 using System.Xml.XPath;
+using System.Net.Http.Headers;
+using RestSharp;
+using RestSharp.Authenticators;
 
 namespace FinalSiteConstituentsExporter
 {
@@ -111,7 +114,7 @@ namespace FinalSiteConstituentsExporter
                     toolStripStatusLabel.Text = "Export failed.";
                     statusStrip.Refresh();
 
-                    MessageBox.Show("Error: " + ex.Message, "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Error: " + ex.ToString(), "Export Results", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
                 Cursor.Current = Cursors.Default;
@@ -141,60 +144,41 @@ namespace FinalSiteConstituentsExporter
         {
             dateTimePicker1.Value = DateTime.Parse(Properties.Settings.Default["startDateLast"].ToString());
         }
-
         private String GetAuthToken(String Username, String Password, String apiKey)
         {
             String Token = "";
-
             try
             {
-                // We use the HttpUtility class from the System.Web namespace  
-                Uri address = new Uri("https://www.ola.community/api/apilogin/apilogin.cfm");
+                // Will get a TLS Error without this
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 
-                // Create the web request  
-                HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+                var client = new RestClient("https://www.ola.community/api/apilogin/apilogin.cfm");
+                client.Authenticator = new HttpBasicAuthenticator(Username, Password);
+                client.Timeout = -1;
 
-                // Set type to POST  
-                request.Method = "POST";
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes(Username + ":" + Password));
+                var request = new RestRequest(Method.POST);
+                request.AlwaysMultipartFormData = true;
+                request.AddParameter("ApiEncryptedKey", apiKey);
 
-                StringBuilder data = new StringBuilder();
-                data.Append("ApiEncryptedKey=" + HttpUtility.UrlEncode(apiKey));
+                IRestResponse response = client.Execute(request);
+                Console.WriteLine(response.Content);
 
-                // Create a byte array of the data we want to send  
-                byte[] byteData = UTF8Encoding.UTF8.GetBytes(data.ToString());
+                XmlDocument doc = new XmlDocument();
+                Stream s = new MemoryStream(response.RawBytes);
+                doc.Load(s);
 
-                // Set the content length in the request headers  
-                request.ContentLength = byteData.Length;
+                XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
 
-                // Write data  
-                using (Stream postStream = request.GetRequestStream())
+                XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
+                if (nodeSuccess.InnerText != "True")
                 {
-                    postStream.Write(byteData, 0, byteData.Length);
+                    XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                    throw new Exception("Error logging into API with user=" + Username + ". Error=" + nodeResultError.InnerText);
                 }
 
-                // Get response  
-                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
-                {
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(response.GetResponseStream());
-
-                    XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
-                    ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
-
-                    XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
-                    if (nodeSuccess.InnerText != "True")
-                    {
-                        XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
-                        throw new Exception("Error logging into API with user=" + Username + ". Error=" + nodeResultError.InnerText);
-                    }
-
-                    XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
-                    Token = nodeResultSuccess.InnerText;
-                }
-
-                return Token;
+                XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                Token = nodeResultSuccess.InnerText;
             }
             catch (WebException ex)
             {
@@ -204,8 +188,10 @@ namespace FinalSiteConstituentsExporter
             {
                 throw ex;
             }
-        }
 
+            return Token;
+        }
+ 
         private long GetConstituentsData(String token, String dateText, String outputDir)
         {
             long rowsExported = 0;
@@ -217,314 +203,353 @@ namespace FinalSiteConstituentsExporter
                 uri += "?ModifiedDate=" + dateText;
                 uri += "&ValidateResult=false";
 
-                Uri address = new Uri(uri);
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 
-                // Create the web request  
-                HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
-                request.Timeout = Timeout.Infinite;
-                request.ReadWriteTimeout = Timeout.Infinite;
-                request.ServicePoint.MaxIdleTime = Timeout.Infinite;
-                request.ServicePoint.ConnectionLeaseTimeout = -1;
+                var client = new RestClient(uri);
+                client.Timeout = -1;
 
-                // Set type to POST  
-                request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
+                var request = new RestRequest(Method.GET);
+                request.AddHeader("Authorization", Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token)));
+                request.AlwaysMultipartFormData = true;
 
-                // Get response  
-                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                IRestResponse response = client.Execute(request);
+                Console.WriteLine(response.Content);
+
+                XmlDocument doc = new XmlDocument();
+                Stream s = new MemoryStream(response.RawBytes);
+                doc.Load(s);
+
+                XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
+
+                XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
+                if (nodeSuccess.InnerText != "True")
                 {
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(response.GetResponseStream());
+                    XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
+                    throw new Exception("Error reading data from Finalsite. Error=" + nodeResultError.InnerText);
+                }
 
-                    XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
-                    ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
+                XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
+                rowsExported = Convert.ToInt64(nodeResultSuccess.InnerText);
 
-                    XmlNode nodeSuccess = doc.SelectSingleNode("//ResultSet/OperationSucceeded", ns);
-                    if (nodeSuccess.InnerText != "True")
+                toolStripStatusLabel.Text = "Writing " + rowsExported.ToString() + " records to files...";
+                statusStrip.Refresh();
+
+                string[,] fields = new string[17, 2] {
+                { "ConstituentID", "MemberID" },
+                { "ImportID_Household", "FamilyID" },
+                { "FirstName", "FirstName" },
+                { "MiddleName", "MiddleName" },
+                { "LastName", "LastName" },
+                { "NameSuffix", "NameSuffix" },
+                { "Gender", "Gender" },
+                { "Custom1", "EnvelopeID" },
+                { "Custom3", "Relationship" },
+                { "Custom4", "ActiveFlag" },
+                { "DateEnrolled", "DateEnrolled" },
+                { "BirthDate", "BirthDate" },
+                { "MaritalStatus", "MaritalStatus" },
+                { "SpouseFirstName", "SpouseFirstName" },
+                { "SpouseLastName", "SpouseLastName" },
+                { "InformalSalutationFamily", "InformalSalutationFamily" },
+                { "InformalSalutationIndividual", "InformalSalutationIndividual" },
+                };
+
+                string[,] fieldsAddresses = new string[5, 2] {
+                { "Address1", "Address1" }, // Addresses/Address/AddressType: Home
+                { "Address2", "Address2" },
+                { "City", "City" },
+                { "State", "State" },
+                { "Zip", "Zip" },
+                };
+
+                string[,] fieldsPhones = new string[3, 2] {
+                { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Mobile, School
+                { "PhoneNumber", "PhoneNumber-Mobile" },
+                { "PhoneNumber", "PhoneNumber-School" },
+                };
+
+                string[,] fieldsEmails = new string[4, 2] {
+                { "Email", "Email-Primary" }, // Emails/Email/EmailType: Home, Work, School
+                { "Email", "Email-Home" },
+                { "Email", "Email-Work" },
+                { "Email", "Email-School" },
+                };
+
+                StringBuilder bodyFamilies = new StringBuilder();
+                StringBuilder bodyMembers = new StringBuilder();
+
+                StringBuilder header = new StringBuilder();
+
+                // Write headers for main info
+                for (int i = 0; i < fields.GetLength(0); i++)
+                {
+                    if (header.Length > 0)
+                        header.Append(",");
+
+                    header.Append(fields[i, 1]);
+                }
+
+                // Write headers for addresses
+                for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                {
+                    if (header.Length > 0)
+                        header.Append(",");
+
+                    header.Append(fieldsAddresses[i, 1]);
+                }
+
+                // Write headers for phones
+                for (int i = 0; i < fieldsPhones.GetLength(0); i++)
+                {
+                    if (header.Length > 0)
+                        header.Append(",");
+
+                    header.Append(fieldsPhones[i, 1]);
+                }
+
+                // Write headers for emails
+                for (int i = 0; i < fieldsEmails.GetLength(0); i++)
+                {
+                    if (header.Length > 0)
+                        header.Append(",");
+
+                    header.Append(fieldsEmails[i, 1]);
+                }
+
+                header.AppendLine();
+                bodyFamilies.Append(header);
+                bodyMembers.Append(header);
+
+                // First, we need to roll through all the records and find households
+                // and put them into a map
+                Dictionary<String, String> dictionarySpouses = new Dictionary<String, String>();
+                Dictionary<String, XmlElement> dictionaryAddresses = new Dictionary<String, XmlElement>();
+
+                List<String> HouseholdsAr = new List<String>();
+
+                XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
+                foreach (XmlNode constituent in constituents)
+                {
+                    String FamilyId = "";
+
+                    // Get the HouseholdID
+                    FamilyId = LookupHouseholdID(constituent);
+
+                    // Get the relationship
+                    XmlNode nodeRelationship = constituent["Custom3"];
+                    if (nodeRelationship == null)
+                        continue;
+
+                    String Relationship = nodeRelationship.InnerText.Replace(",", "");
+                    if (Relationship != "Primary Contact" && Relationship != "Head of Household")
+                        continue;
+
+                    if (!dictionarySpouses.ContainsKey(FamilyId))
+                        HouseholdsAr.Add(FamilyId);
+                }
+
+                // Now go get the missing Spouses and add them to dictionarySpouses Collection
+                //
+                GetMissingInfo(token, "constituents", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
+
+                // Now get any missing addresses for those whose addresses are shared
+                //
+                GetMissingInfo(token, "households", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
+
+                // Now process the Families and Individuals records
+                foreach (XmlNode constituent in constituents)
+                {
+                    Boolean bIsHeadofHousehold = false;
+                    StringBuilder body = new StringBuilder();
+                    String MemberId = "";
+                    String FamilyId = "";
+                    String FirstName = "";
+
+                    // Get the ImportIDHousehold
+                    // Get the HouseholdID
+                    FamilyId = LookupHouseholdID(constituent);
+
+                    // Get the Relationship
+                    XmlNode nodeRelationship = constituent["Custom3"];
+                    if (nodeRelationship != null)
                     {
-                        XmlNode nodeResultError = doc.SelectSingleNode("//ResultSet/OperationResult", ns);
-                        throw new Exception("Error reading data from Finalsite. Error=" + nodeResultError.InnerText);
+                        String Relationship = nodeRelationship.InnerText.Replace(",", "");
+                        if (Relationship == "Primary Contact")
+                            bIsHeadofHousehold = true;
                     }
 
-                    XmlNode nodeResultSuccess = doc.SelectSingleNode("//ResultSet/OperationKey", ns);
-                    rowsExported = Convert.ToInt64(nodeResultSuccess.InnerText);
-
-                    toolStripStatusLabel.Text = "Writing data to files...";
-                    statusStrip.Refresh();
-
-                    string[,] fields = new string[17, 2] {
-                    { "ConstituentID", "MemberID" },
-                    { "ImportID_Household", "FamilyID" },
-                    { "FirstName", "FirstName" },
-                    { "MiddleName", "MiddleName" },
-                    { "LastName", "LastName" },
-                    { "NameSuffix", "NameSuffix" },
-                    { "Gender", "Gender" },
-                    { "Custom1", "EnvelopeID" },
-                    { "Custom3", "Relationship" },
-                    { "Custom4", "ActiveFlag" },
-                    { "DateEnrolled", "DateEnrolled" },
-                    { "BirthDate", "BirthDate" },
-                    { "MaritalStatus", "MaritalStatus" },
-                    { "SpouseFirstName", "SpouseFirstName" },
-                    { "SpouseLastName", "SpouseLastName" },
-                    { "InformalSalutationFamily", "InformalSalutationFamily" },
-                    { "InformalSalutationIndividual", "InformalSalutationIndividual" },
-                    };
-
-                    string[,] fieldsAddresses = new string[5, 2] {
-                    { "Address1", "Address1" }, // Addresses/Address/AddressType: Home
-                    { "Address2", "Address2" },
-                    { "City", "City" },
-                    { "State", "State" },
-                    { "Zip", "Zip" },
-                    };
-
-                    string[,] fieldsPhones = new string[3, 2] {
-                    { "PhoneNumber", "PhoneNumber-Home" }, // Phones/Phone/PhoneType: Home, Mobile, School
-                    { "PhoneNumber", "PhoneNumber-Mobile" },
-                    { "PhoneNumber", "PhoneNumber-School" },
-                    };
-
-                    string[,] fieldsEmails = new string[4, 2] {
-                    { "Email", "Email-Primary" }, // Emails/Email/EmailType: Home, Work, School
-                    { "Email", "Email-Home" },
-                    { "Email", "Email-Work" },
-                    { "Email", "Email-School" },
-                    };
-
-                    StringBuilder bodyFamilies = new StringBuilder();
-                    StringBuilder bodyMembers = new StringBuilder();
-
-                    StringBuilder header = new StringBuilder();
-
-                    // Write headers for main info
                     for (int i = 0; i < fields.GetLength(0); i++)
                     {
-                        if (header.Length > 0)
-                            header.Append(",");
+                        if (body.Length > 0)
+                            body.Append(",");
 
-                        header.Append(fields[i, 1]);
-                    }
+                        String value = "";
 
-                    // Write headers for addresses
-                    for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
-                    {
-                        if (header.Length > 0)
-                            header.Append(",");
-
-                        header.Append(fieldsAddresses[i, 1]);
-                    }
-
-                    // Write headers for phones
-                    for (int i = 0; i < fieldsPhones.GetLength(0); i++)
-                    {
-                        if (header.Length > 0)
-                            header.Append(",");
-
-                        header.Append(fieldsPhones[i, 1]);
-                    }
-
-                    // Write headers for emails
-                    for (int i = 0; i < fieldsEmails.GetLength(0); i++)
-                    {
-                        if (header.Length > 0)
-                            header.Append(",");
-
-                        header.Append(fieldsEmails[i, 1]);
-                    }
-
-                    header.AppendLine();
-                    bodyFamilies.Append(header);
-                    bodyMembers.Append(header);
-
-                    // First, we need to roll through all the records and find households
-                    // and put them into a map
-                    Dictionary<String, String> dictionarySpouses = new Dictionary<String, String>();
-                    Dictionary<String, XmlElement> dictionaryAddresses = new Dictionary<String, XmlElement>();
-
-                    List<String> HouseholdsAr = new List<String>();
-
-                    XmlNodeList constituents = doc.SelectNodes("//ResultSet/Constituents/Constituent", ns);
-                    foreach (XmlNode constituent in constituents)
-                    {
-                        String FamilyId = "";
-
-                        // Get the HouseholdID
-                        FamilyId = LookupHouseholdID(constituent);
-
-                        // Get the relationship
-                        XmlNode nodeRelationship = constituent["Custom3"];
-                        if (nodeRelationship == null)
-                            continue;
-
-                        String Relationship = nodeRelationship.InnerText.Replace(",", "");
-                        if (Relationship != "Primary Contact" && Relationship != "Head of Household")
-                            continue;
-
-                        if (!dictionarySpouses.ContainsKey(FamilyId))
-                            HouseholdsAr.Add(FamilyId);
-                    }
-
-                    // Now go get the missing Spouses and add them to dictionarySpouses Collection
-                    //
-                    GetMissingInfo(token, "constituents", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
-
-                    // Now get any missing addresses for those whose addresses are shared
-                    //
-                    GetMissingInfo(token, "households", dictionarySpouses, dictionaryAddresses, HouseholdsAr);
-
-                    // Now process the Families and Individuals records
-                    foreach (XmlNode constituent in constituents)
-                    {
-                        Boolean bIsHeadofHousehold = false;
-                        StringBuilder body = new StringBuilder();
-                        String MemberId = "";
-                        String FamilyId = "";
-                        String FirstName = "";
-
-                        // Get the ImportIDHousehold
-                        // Get the HouseholdID
-                        FamilyId = LookupHouseholdID(constituent);
-
-                        // Get the Relationship
-                        XmlNode nodeRelationship = constituent["Custom3"];
-                        if (nodeRelationship != null)
+                        XmlNode node = constituent[fields[i, 0]];
+                        if (node == null)
                         {
-                            String Relationship = nodeRelationship.InnerText.Replace(",", "");
-                            if (Relationship == "Primary Contact")
-                                bIsHeadofHousehold = true;
-                        }
-
-                        for (int i = 0; i < fields.GetLength(0); i++)
-                        {
-                            if (body.Length > 0)
-                                body.Append(",");
-
-                            String value = "";
-
-                            XmlNode node = constituent[fields[i, 0]];
-                            if (node == null)
+                            if (fields[i, 1] == "EnvelopeID")
                             {
-                                if (fields[i, 1] == "EnvelopeID")
+                                // If the envelopeid is empty, fill it with the
+                                // the "none-" + FamilyID or MemberID
+                                if (FamilyId.Length == 0)
+                                    value = "nonem-" + MemberId;
+                                else if (FamilyId.Length >= 6)
+                                    value = FamilyId;
+                                else
+                                    value = "none-" + FamilyId;
+                            }
+                            else if (fields[i, 1] == "SpouseFirstName" && bIsHeadofHousehold == true)
+                            {
+                                if (dictionarySpouses.ContainsKey(FamilyId))
                                 {
-                                    // If the envelopeid is empty, fill it with the
-                                    // the "none-" + FamilyID or MemberID
-                                    if (FamilyId.Length == 0)
-                                        value = "nonem-" + MemberId;
-                                    else if (FamilyId.Length >= 6)
-                                        value = FamilyId;
-                                    else
-                                        value = "none-" + FamilyId;
+                                    string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
+                                    if (FirstLastAr.Length == 2)
+                                        value = FirstLastAr[0];
                                 }
-                                else if (fields[i, 1] == "SpouseFirstName" && bIsHeadofHousehold == true)
+                            }
+                            else if (fields[i, 1] == "SpouseLastName" && bIsHeadofHousehold == true)
+                            {
+                                if (dictionarySpouses.ContainsKey(FamilyId))
                                 {
-                                    if (dictionarySpouses.ContainsKey(FamilyId))
-                                    {
-                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
-                                        if (FirstLastAr.Length == 2)
-                                            value = FirstLastAr[0];
-                                    }
+                                    string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
+                                    if (FirstLastAr.Length == 2)
+                                        value = FirstLastAr[1];
                                 }
-                                else if (fields[i, 1] == "SpouseLastName" && bIsHeadofHousehold == true)
+                            }
+                            else if (fields[i, 1] == "InformalSalutationFamily" && bIsHeadofHousehold == true)
+                            {
+                                if (dictionarySpouses.ContainsKey(FamilyId))
                                 {
-                                    if (dictionarySpouses.ContainsKey(FamilyId))
+                                    string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
+                                    if (FirstLastAr.Length == 2)
                                     {
-                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
-                                        if (FirstLastAr.Length == 2)
-                                            value = FirstLastAr[1];
-                                    }
-                                }
-                                else if (fields[i, 1] == "InformalSalutationFamily" && bIsHeadofHousehold == true)
-                                {
-                                    if (dictionarySpouses.ContainsKey(FamilyId))
-                                    {
-                                        string[] FirstLastAr = dictionarySpouses[FamilyId].Split(':');
-                                        if (FirstLastAr.Length == 2)
+                                        String SpouseFirstName = FirstLastAr[0];
+                                        if (FirstName.Length > 0)
                                         {
-                                            String SpouseFirstName = FirstLastAr[0];
-                                            if (FirstName.Length > 0)
+                                            value = FirstName;
+                                            if (SpouseFirstName.Length > 0)
                                             {
-                                                value = FirstName;
-                                                if (SpouseFirstName.Length > 0)
-                                                {
-                                                    value += " & " + SpouseFirstName;
-                                                }
-                                            } 
-                                        }
-                                    }
-                                    else
-                                    {
-                                        value = FirstName;
+                                                value += " & " + SpouseFirstName;
+                                            }
+                                        } 
                                     }
                                 }
-                                else if (fields[i, 1] == "InformalSalutationIndividual" || fields[i, 1] == "InformalSalutationFamily")
+                                else
                                 {
                                     value = FirstName;
                                 }
-                                else if (fields[i, 1] == "FamilyID")
-                                {
-                                    value = FamilyId;
-                                }
-                                else
-                                    continue;
                             }
-                            else
-                                value = node.InnerText.Replace(",", "");
-
-                            Console.WriteLine(value);
-
-                            // Perform transformations
-                            if (fields[i, 1] == "Relationship" && bIsHeadofHousehold == true)
+                            else if (fields[i, 1] == "InformalSalutationIndividual" || fields[i, 1] == "InformalSalutationFamily")
                             {
-                                value = "Head of Household";
+                                value = FirstName;
                             }
-
-                            if (fields[i, 1] == "MemberID")
-                            {
-                                value = value.Replace("fs_", "");
-                                MemberId = value;
-                            }
-
-                            if (fields[i, 1] == "ActiveFlag")
-                            {
-                                // Mark this with a special token so we can replace later
-                                if (value == "Active")
-                                    value = "True";
-                                else
-                                    value = "False";
-                            }
-
-                            // Save FamilyID for later
-                            if (fields[i, 1] == "FamilyID")
+                            else if (fields[i, 1] == "FamilyID")
                             {
                                 value = FamilyId;
                             }
+                            else
+                                continue;
+                        }
+                        else
+                            value = node.InnerText.Replace(",", "");
 
-                            // Save FirstName for later
-                            if (fields[i, 1] == "FirstName")
-                            {
-                                FirstName = value;
-                            }
+                        Console.WriteLine(value);
 
-                            body.Append(value);
+                        // Perform transformations
+                        if (fields[i, 1] == "Relationship" && bIsHeadofHousehold == true)
+                        {
+                            value = "Head of Household";
                         }
 
-                        // Handle Addresses
-                        XmlElement addressesElement = constituent["Addresses"];
-                        if (addressesElement == null)
+                        if (fields[i, 1] == "MemberID")
                         {
-                            // Lookup our missing addresses from our collection
-                            //
-                            if (dictionaryAddresses.ContainsKey(FamilyId))
+                            value = value.Replace("fs_", "");
+                            MemberId = value;
+                        }
+
+                        if (fields[i, 1] == "ActiveFlag")
+                        {
+                            // Mark this with a special token so we can replace later
+                            if (value == "Active")
+                                value = "True";
+                            else
+                                value = "False";
+                        }
+
+                        // Save FamilyID for later
+                        if (fields[i, 1] == "FamilyID")
+                        {
+                            value = FamilyId;
+                        }
+
+                        // Save FirstName for later
+                        if (fields[i, 1] == "FirstName")
+                        {
+                            FirstName = value;
+                        }
+
+                        body.Append(value);
+                    }
+
+                    // Handle Addresses
+                    XmlElement addressesElement = constituent["Addresses"];
+                    if (addressesElement == null)
+                    {
+                        // Lookup our missing addresses from our collection
+                        //
+                        if (dictionaryAddresses.ContainsKey(FamilyId))
+                        {
+                            addressesElement = dictionaryAddresses[FamilyId];
+
+                            for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
                             {
-                                addressesElement = dictionaryAddresses[FamilyId];
+                                if (body.Length > 0)
+                                    body.Append(",");
+
+                                XmlNode nodeA = addressesElement[fieldsAddresses[i, 0]];
+                                if (nodeA == null)
+                                    continue;
+
+                                String value = nodeA.InnerText.Replace(",", "");
+
+                                body.Append(value);
+                            }
+                        }
+                        else
+                        {
+                            // Need to make sure we have placeholders if their is no address
+                            for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
+                            {
+                                if (body.Length > 0)
+                                    body.Append(",");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        XmlNodeList addresses = addressesElement.ChildNodes;
+                        if (addresses != null)
+                        {
+                            foreach (XmlNode addressNode in addresses)
+                            {
+                                String addressTypeStr = "";
+
+                                XmlNode addressType = addressNode["AddressType"];
+                                if (addressType != null)
+                                    addressTypeStr = addressType.InnerText;
+
+                                // Only pull home addresses
+                                if (addressTypeStr != "Home")
+                                    continue;
 
                                 for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
                                 {
                                     if (body.Length > 0)
                                         body.Append(",");
 
-                                    XmlNode nodeA = addressesElement[fieldsAddresses[i, 0]];
+                                    XmlNode nodeA = addressNode[fieldsAddresses[i, 0]];
                                     if (nodeA == null)
                                         continue;
 
@@ -533,175 +558,137 @@ namespace FinalSiteConstituentsExporter
                                     body.Append(value);
                                 }
                             }
-                            else
-                            {
-                                // Need to make sure we have placeholders if their is no address
-                                for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
-                                {
-                                    if (body.Length > 0)
-                                        body.Append(",");
-                                }
-                            }
                         }
-                        else
-                        {
-                            XmlNodeList addresses = addressesElement.ChildNodes;
-                            if (addresses != null)
-                            {
-                                foreach (XmlNode addressNode in addresses)
-                                {
-                                    String addressTypeStr = "";
-
-                                    XmlNode addressType = addressNode["AddressType"];
-                                    if (addressType != null)
-                                        addressTypeStr = addressType.InnerText;
-
-                                    // Only pull home addresses
-                                    if (addressTypeStr != "Home")
-                                        continue;
-
-                                    for (int i = 0; i < fieldsAddresses.GetLength(0); i++)
-                                    {
-                                        if (body.Length > 0)
-                                            body.Append(",");
-
-                                        XmlNode nodeA = addressNode[fieldsAddresses[i, 0]];
-                                        if (nodeA == null)
-                                            continue;
-
-                                        String value = nodeA.InnerText.Replace(",", "");
-
-                                        body.Append(value);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Handle Phones
-                        Dictionary<String, String> dictionaryPhones = new Dictionary<String, String>();
-
-                        XmlElement phonesElement = constituent["Phones"];
-                        if (phonesElement != null)
-                        {
-                            XmlNodeList phones = phonesElement.ChildNodes;
-                            if (phones != null)
-                            {
-                                foreach (XmlNode phonesNode in phones)
-                                {
-                                    String phoneTypeStr = "";
-
-                                    XmlNode phoneType = phonesNode["PhoneType"];
-                                    if (phoneType != null)
-                                        phoneTypeStr = phoneType.InnerText;
-
-                                    XmlNode nodeP = phonesNode["PhoneNumber"];
-                                    if (nodeP == null)
-                                        continue;
-
-                                    String value = nodeP.InnerText.Replace(",", "");
-                                    dictionaryPhones.Add(phoneTypeStr, value);
-                                }
-                            }
-                        }
-
-                        // Now lookup in Home, Mobile, School order
-                        body.Append(",");
-                        if (dictionaryPhones.ContainsKey("Home"))
-                        {
-                            String value = dictionaryPhones["Home"];
-                            body.Append(value);
-                        }
-
-                        body.Append(",");
-                        if (dictionaryPhones.ContainsKey("Mobile"))
-                        {
-                            String value = dictionaryPhones["Mobile"];
-                            body.Append(value);
-                        }
-
-                        body.Append(",");
-                        if (dictionaryPhones.ContainsKey("School"))
-                        {
-                            String value = dictionaryPhones["School"];
-                            body.Append(value);
-                        }
-
-                        // Handle Emails
-                        Dictionary<String, String> dictionaryEmails = new Dictionary<String, String>();
-
-                        XmlElement emailsElement = constituent["Emails"];
-                        if (emailsElement != null)
-                        {
-                            XmlNodeList emails = emailsElement.ChildNodes;
-                            if (emails != null)
-                            {
-                                foreach (XmlNode emailsNode in emails)
-                                {
-                                    String emailTypeStr = "";
-
-                                    XmlNode emailType = emailsNode["EmailType"];
-                                    if (emailType != null)
-                                    {
-                                        emailTypeStr = emailType.InnerText;
-
-                                        if (emailTypeStr.Length == 0)
-                                            emailTypeStr = "Primary";
-
-                                        XmlNode nodeE = emailsNode["EmailAddress"];
-                                        if (nodeE == null)
-                                            continue;
-
-                                        String value = nodeE.InnerText.Replace(",", "");
-                                        dictionaryEmails.Add(emailTypeStr, value);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Now lookup in Home, Mobile, School order
-                        body.Append(",");
-                        if (dictionaryEmails.ContainsKey("Primary"))
-                        {
-                            String value = dictionaryEmails["Primary"];
-                            body.Append(value);
-                        }
-
-                        body.Append(",");
-                        if (dictionaryEmails.ContainsKey("Home"))
-                        {
-                            String value = dictionaryEmails["Home"];
-                            body.Append(value);
-                        }
-
-                        body.Append(",");
-                        if (dictionaryEmails.ContainsKey("Work"))
-                        {
-                            String value = dictionaryEmails["Work"];
-                            body.Append(value);
-                        }
-
-                        body.Append(",");
-                        if (dictionaryEmails.ContainsKey("School"))
-                        {
-                            String value = dictionaryEmails["School"];
-                            body.Append(value);
-                        }
-
-                        body.AppendLine();
-
-                        // Only write the head of household to the Families file
-                        if (bIsHeadofHousehold)
-                        {
-                            bodyFamilies.Append(body);
-                        }
-
-                        bodyMembers.Append(body);
                     }
 
-                    // Now write the files
-                    System.IO.File.WriteAllText(outputDir + "//" + "families.csv", bodyFamilies.ToString());
-                    System.IO.File.WriteAllText(outputDir + "//" + "members.csv", bodyMembers.ToString());
+                    // Handle Phones
+                    Dictionary<String, String> dictionaryPhones = new Dictionary<String, String>();
+
+                    XmlElement phonesElement = constituent["Phones"];
+                    if (phonesElement != null)
+                    {
+                        XmlNodeList phones = phonesElement.ChildNodes;
+                        if (phones != null)
+                        {
+                            foreach (XmlNode phonesNode in phones)
+                            {
+                                String phoneTypeStr = "";
+
+                                XmlNode phoneType = phonesNode["PhoneType"];
+                                if (phoneType != null)
+                                    phoneTypeStr = phoneType.InnerText;
+
+                                XmlNode nodeP = phonesNode["PhoneNumber"];
+                                if (nodeP == null)
+                                    continue;
+
+                                String value = nodeP.InnerText.Replace(",", "");
+
+                                if (!dictionaryPhones.ContainsKey(phoneTypeStr))
+                                    dictionaryPhones.Add(phoneTypeStr, value);
+                            }
+                        }
+                    }
+
+                    // Now lookup in Home, Mobile, School order
+                    body.Append(",");
+                    if (dictionaryPhones.ContainsKey("Home"))
+                    {
+                        String value = dictionaryPhones["Home"];
+                        body.Append(value);
+                    }
+
+                    body.Append(",");
+                    if (dictionaryPhones.ContainsKey("Mobile"))
+                    {
+                        String value = dictionaryPhones["Mobile"];
+                        body.Append(value);
+                    }
+
+                    body.Append(",");
+                    if (dictionaryPhones.ContainsKey("School"))
+                    {
+                        String value = dictionaryPhones["School"];
+                        body.Append(value);
+                    }
+
+                    // Handle Emails
+                    Dictionary<String, String> dictionaryEmails = new Dictionary<String, String>();
+
+                    XmlElement emailsElement = constituent["Emails"];
+                    if (emailsElement != null)
+                    {
+                        XmlNodeList emails = emailsElement.ChildNodes;
+                        if (emails != null)
+                        {
+                            foreach (XmlNode emailsNode in emails)
+                            {
+                                String emailTypeStr = "";
+
+                                XmlNode emailType = emailsNode["EmailType"];
+                                if (emailType != null)
+                                {
+                                    emailTypeStr = emailType.InnerText;
+
+                                    if (emailTypeStr.Length == 0)
+                                        emailTypeStr = "Primary";
+
+                                    XmlNode nodeE = emailsNode["EmailAddress"];
+                                    if (nodeE == null)
+                                        continue;
+
+                                    String value = nodeE.InnerText.Replace(",", "");
+
+                                    if (!dictionaryEmails.ContainsKey(emailTypeStr))
+                                        dictionaryEmails.Add(emailTypeStr, value);
+                                }
+                            }
+                        }
+                    }
+
+                    // Now lookup in Home, Mobile, School order
+                    body.Append(",");
+                    if (dictionaryEmails.ContainsKey("Primary"))
+                    {
+                        String value = dictionaryEmails["Primary"];
+                        body.Append(value);
+                    }
+
+                    body.Append(",");
+                    if (dictionaryEmails.ContainsKey("Home"))
+                    {
+                        String value = dictionaryEmails["Home"];
+                        body.Append(value);
+                    }
+
+                    body.Append(",");
+                    if (dictionaryEmails.ContainsKey("Work"))
+                    {
+                        String value = dictionaryEmails["Work"];
+                        body.Append(value);
+                    }
+
+                    body.Append(",");
+                    if (dictionaryEmails.ContainsKey("School"))
+                    {
+                        String value = dictionaryEmails["School"];
+                        body.Append(value);
+                    }
+
+                    body.AppendLine();
+
+                    // Only write the head of household to the Families file
+                    if (bIsHeadofHousehold)
+                    {
+                        bodyFamilies.Append(body);
+                    }
+
+                    bodyMembers.Append(body);
                 }
+
+                // Now write the files
+                System.IO.File.WriteAllText(outputDir + "//" + "families.csv", bodyFamilies.ToString());
+                System.IO.File.WriteAllText(outputDir + "//" + "members.csv", bodyMembers.ToString());
 
                 return rowsExported;
             }
@@ -823,27 +810,44 @@ namespace FinalSiteConstituentsExporter
 
                 for (int i=0; i< HouseholdsBatchAr.Count; i++)
                 {
-                    // We use the HttpUtility class from the System.Web namespace  
                     String uri = "https://www.ola.community/api/constituents/" + apiName + ".cfm";
                     uri += "?ImportIDList_Household=" + HouseholdsBatchAr[i].ToString();
 
-                    Uri address = new Uri(uri);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 
-                    // Create the web request  
-                    HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
-                    request.Timeout = Timeout.Infinite;
-                    request.ReadWriteTimeout = Timeout.Infinite;
-                    request.ServicePoint.MaxIdleTime = Timeout.Infinite;
-                    request.ServicePoint.ConnectionLeaseTimeout = -1;
+                    var client = new RestClient(uri);
+                    client.Timeout = -1;
+                    
+                    var request = new RestRequest(Method.GET);
+                    request.AddHeader("Authorization", Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token)));
+                    request.AlwaysMultipartFormData = true;
+                    request.AddParameter("apitoken", "BAB13//F1192FD9B337834B92F03138222.cfusion_671");
 
-                    // Set type to POST  
-                    request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
+                    IRestResponse response = client.Execute(request);
+                    Console.WriteLine(response.Content);
 
-                    // Get response  
-                    using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
-                    {
-                        XmlDocument doc = new XmlDocument();
-                        doc.Load(response.GetResponseStream());
+                    XmlDocument doc = new XmlDocument();
+                    Stream s = new MemoryStream(response.RawBytes);
+                    doc.Load(s);
+
+
+                    /*
+
+                                     // Create the web request  
+                                     HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+                                     request.Timeout = Timeout.Infinite;
+                                     request.ReadWriteTimeout = Timeout.Infinite;
+                                     request.ServicePoint.MaxIdleTime = Timeout.Infinite;
+                                     request.ServicePoint.ConnectionLeaseTimeout = -1;
+
+                                     // Set type to POST  
+                                     request.Headers["Authorization"] = Convert.ToBase64String(Encoding.Default.GetBytes("apitoken:" + token));
+
+                                     // Get response  
+                                     using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)*/
+//                    {
+//                        XmlDocument doc = new XmlDocument();
+//                        doc.Load(response.GetResponseStream());
 
                         XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
                         ns.AddNamespace("apidata", "http://www.finalsite.com/apidata/v1.0");
@@ -862,7 +866,7 @@ namespace FinalSiteConstituentsExporter
                         else if (apiName == "households")
                             FillAddressesCollection(doc, dictionaryAddresses, ns);
                     }
-                }
+ //               }
             }
             catch (WebException ex)
             {

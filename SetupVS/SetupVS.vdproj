@@ -58,13 +58,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_918D3793A8C2FE68E44FE614053FAD7D"
+        "OwnerKey" = "8:_3AA09E607D39D3F00B2F729FF80278A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3AA09E607D39D3F00B2F729FF80278A8"
+        "OwnerKey" = "8:_918D3793A8C2FE68E44FE614053FAD7D"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -92,6 +92,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
         "Release"
@@ -116,6 +124,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
     }
@@ -153,11 +169,6 @@
             "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
                 "ScatterAssemblies"
                 {
-                    "_3AA09E607D39D3F00B2F729FF80278A8"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:System.Net.Http.dll"
             "TargetName" = "8:"
@@ -224,11 +235,6 @@
             "AssemblyAsmDisplayName" = "8:RestSharp, Version=106.11.4.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_918D3793A8C2FE68E44FE614053FAD7D"
-                    {
-                    "Name" = "8:RestSharp.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:RestSharp.dll"
             "TargetName" = "8:"
@@ -323,7 +329,7 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:SetupVS"
+        "ProductName" = "8:OLA FinalSite Constituents Exporter"
         "ProductCode" = "8:{DFBC20EB-23BD-4CE1-BD09-00C98022DFDD}"
         "PackageCode" = "8:{F04A93E5-761A-4BB5-964C-16E28B414E0C}"
         "UpgradeCode" = "8:{D6C18500-780A-44CE-84FE-7FA9B0EE9CB9}"
@@ -333,12 +339,12 @@
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
         "ProductVersion" = "8:1.0.0"
-        "Manufacturer" = "8:David Mariani"
+        "Manufacturer" = "8:OLA Parish"
         "ARPHELPTELEPHONE" = "8:650.483.4491"
         "ARPHELPLINK" = "8:"
         "Title" = "8:OLA FinalSite Constituents Exporter"
         "Subject" = "8:"
-        "ARPCONTACT" = "8:OLA Parish"
+        "ARPCONTACT" = "8:David Mariani"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:OLA FinalSite Constituents Exporter"
         "ARPURLINFOABOUT" = "8:www.ola.community"
